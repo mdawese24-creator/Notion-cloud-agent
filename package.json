@@ -1,0 +1,15 @@
+{
+  "name": "awais-notion-cloud-agent",
+  "version": "1.0.0",
+  "description": "24/7 Autonomous Cloud Sync Engine & Mobile Assistant for Notion",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["notion", "telegram", "automation", "expenses"],
+  "author": "Md Awais",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
