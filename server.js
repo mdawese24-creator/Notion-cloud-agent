@@ -556,4 +556,13 @@ server.listen(PORT, () => {
 
   // Start Telegram Bot polling
   pollTelegram();
+
+  // Self-ping every 10 minutes to prevent Render free instance from sleeping
+  setInterval(() => {
+    https.get('https://awais-notion-cloud-agent.onrender.com', (res) => {
+      console.log(`[Keep-Alive] Pinged self. Status: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.log(`[Keep-Alive] Ping error: ${err.message}`);
+    });
+  }, 10 * 60 * 1000);
 });
