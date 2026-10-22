@@ -1,5 +1,7 @@
 # 🚀 Awais 24/7 Notion Cloud Agent
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/mdawese24-creator/Notion-cloud-agent)
+
 This worker runs 100% autonomously in the cloud 24/7/365.
 **No laptop required!** Even if your laptop is shut down, battery dead, or left at the office, this agent keeps your Notion in real-time sync.
 
