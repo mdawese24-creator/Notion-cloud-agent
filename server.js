@@ -504,12 +504,28 @@ async function handleTelegramMessage(text) {
   // A. RECHARGE QUESTION
   if (lower.includes('recharge') && (isQuestion || lower.includes('last') || lower.includes('history'))) {
     let target = '';
-    if (lower.includes('nani')) target = 'nani';
-    else if (lower.includes('abba') || lower.includes('baba')) target = 'abba';
-    else if (lower.includes('ammi')) target = 'ammi';
-    else if (lower.includes('atif')) target = 'atif';
-    else if (lower.includes('jio')) target = 'jio';
-    else if (lower.includes('airtel')) target = 'airtel';
+    let isStrictB = false;
+    let isStrictC = false;
+
+    if (lower.includes('b.nani') || lower.includes('b nani') || lower.includes('badi nani') || lower.includes('b-nani') || lower.includes('srif b') || lower.includes('sirf b')) {
+      target = 'B. Nani (Badi Nani)';
+      isStrictB = true;
+    } else if (lower.includes('c.nani') || lower.includes('c nani') || lower.includes('choti nani') || lower.includes('chhoti nani') || lower.includes('c-nani')) {
+      target = 'C. Nani (Chhoti Nani)';
+      isStrictC = true;
+    } else if (lower.includes('nani')) {
+      target = 'Nani';
+    } else if (lower.includes('abba') || lower.includes('baba')) {
+      target = 'Abba';
+    } else if (lower.includes('ammi')) {
+      target = 'Ammi';
+    } else if (lower.includes('atif')) {
+      target = 'Atif';
+    } else if (lower.includes('jio')) {
+      target = 'Jio';
+    } else if (lower.includes('airtel')) {
+      target = 'Airtel';
+    }
 
     const filter = {
       or: [
@@ -525,11 +541,22 @@ async function handleTelegramMessage(text) {
     });
 
     let matches = res.results || [];
-    if (target) {
+    if (isStrictB) {
+      matches = matches.filter(r => {
+        const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
+        const isC = title.includes('c nani') || title.includes('c.nani') || title.includes('c .nani') || title.includes('choti') || title.includes('chhoti');
+        return !isC && (title.includes('b.nani') || title.includes('b nani') || title.includes('b .nani') || title.includes('badi'));
+      });
+    } else if (isStrictC) {
+      matches = matches.filter(r => {
+        const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
+        return title.includes('c nani') || title.includes('c.nani') || title.includes('c .nani') || title.includes('choti') || title.includes('chhoti');
+      });
+    } else if (target) {
       matches = matches.filter(r => {
         const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
         const details = (r.properties['Reason / Details']?.rich_text?.[0]?.plain_text || '').toLowerCase();
-        return title.includes(target) || details.includes(target);
+        return title.includes(target.toLowerCase()) || details.includes(target.toLowerCase());
       });
     }
 
