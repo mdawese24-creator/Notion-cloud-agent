@@ -324,24 +324,37 @@ async function runQuickCaptureSync() {
         }
       }
 
-      // Check task
+      // Classification
       const lower = text.toLowerCase();
-      const isTask = lower.includes('karna hai') || lower.includes('reminder') || lower.includes('call karna') ||
-                     lower.includes('check karna') || lower.includes('pending') || lower.includes('task');
-
       let handledCategory = null;
       let summaryText = null;
 
-      if (isTask) {
+      const isGym = lower.includes('gym') || lower.includes('workout') || (lower.includes('kg') && lower.includes('weight'));
+      const isShift = lower.includes('shift') || lower.includes('roster') || lower.includes('attendance');
+      const isTask = lower.includes('karna hai') || lower.includes('reminder') || lower.includes('call karna') ||
+                     lower.includes('check karna') || lower.includes('pending') || lower.includes('task') || lower.includes('change karna');
+
+      if (isGym) {
+        handledCategory = '🏋️‍♂️ Gym Tracker';
+        summaryText = `Logged workout in Gym Tracker: "${text}"`;
+      } else if (isShift) {
+        handledCategory = '📝 Note / Other';
+        summaryText = `Saved Shift Roster note: "${text}"`;
+      } else if (isTask) {
         const cleanTitle = text.replace(/^(task|pending|reminder)\s*[:\-]\s*/i, '').trim();
         const kaamProps = {
           Name: { title: [{ text: { content: cleanTitle } }] },
           Status: { select: { name: '⏳ Pending' } },
           'Today Date': { date: { start: getTodayIST() } }
         };
+        let updated = false;
         if (syncedId) {
-          await notionReq(`/v1/pages/${syncedId}`, 'PATCH', { properties: kaamProps });
-        } else {
+          try {
+            const patchRes = await notionReq(`/v1/pages/${syncedId}`, 'PATCH', { properties: kaamProps });
+            if (patchRes && !patchRes.error && patchRes.id) updated = true;
+          } catch (e) { updated = false; }
+        }
+        if (!updated) {
           const newKaam = await notionReq('/v1/pages', 'POST', { parent: { database_id: DB_KAAM }, properties: kaamProps });
           syncedId = newKaam?.id;
         }
@@ -351,13 +364,37 @@ async function runQuickCaptureSync() {
         // Daily Expense
         let amount = ocrParsed?.amount;
         if (!amount) {
-          const numMatch = text.match(/(?:rs\.?|inr|₹)?\s*(\d+(?:,\d+)*(?:\.\d+)?)/i);
-          if (numMatch) amount = parseFloat(numMatch[1].replace(/,/g, ''));
+          // Explicit currency match FIRST
+          const curMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)/i) ||
+                           text.match(/([\d,]+(?:\.\d+)?)\s*(?:rs|rupaye|rupees|inr)\b/i);
+          if (curMatch) {
+            amount = parseFloat(curMatch[1].replace(/,/g, ''));
+          } else {
+            // Only if text contains explicit expense intent keywords
+            const hasExpenseKeyword = lower.includes('kharch') || lower.includes('spent') || lower.includes('diya') ||
+                                      lower.includes('liya') || lower.includes('paid') || lower.includes('chai') ||
+                                      lower.includes('fal') || lower.includes('petrol') || lower.includes('auto') ||
+                                      lower.includes('rapido') || lower.includes('rent') || lower.includes('food') ||
+                                      lower.includes('nashta') || lower.includes('breakfast') || lower.includes('lunch') ||
+                                      lower.includes('dinner') || lower.includes('shopping') || lower.includes('recharge') ||
+                                      lower.includes('bill');
+            if (hasExpenseKeyword) {
+              const sanitizedForNum = text
+                .replace(/\b(?:5g|4g|3g|nova\s*\d+|iphone\s*\d+|s\d+|a\d+|step\s*\d+)\b/gi, '')
+                .replace(/\b\d{6,}\b/g, ''); // ignore OTPs/Pincodes
+              const numMatch = sanitizedForNum.match(/\b(\d+(?:,\d+)*(?:\.\d+)?)\b/);
+              if (numMatch) {
+                const val = parseFloat(numMatch[1].replace(/,/g, ''));
+                if (val > 0 && val < 100000) amount = val;
+              }
+            }
+          }
         }
 
         if (amount && amount > 0) {
           let cleanName = text
-            .replace(/(?:rs\.?|inr|₹)?\s*\d+(?:,\d+)*(?:\.\d+)?\s*(?:rs|rupaye|rupees|inr)?/gi, '')
+            .replace(/(?:rs\.?|inr|₹)\s*[\d,]+(?:\.\d+)?/gi, '')
+            .replace(/[\d,]+(?:\.\d+)?\s*(?:rs|rupaye|rupees|inr)/gi, '')
             .replace(/\b(kotak|sbi|state bank|cash|phonepe|gpay|paytm|debit card|debit|credit|account|spent|kharcha|diya|liya|paid|bhai|aaj|pe|se|ko|add|kardo|kar do|daily|expensive|expenses|entry)\b/gi, '')
             .trim();
 
@@ -368,7 +405,14 @@ async function runQuickCaptureSync() {
           }
           cleanName = toTitleCase(cleanName);
 
-          const targetDate = ocrParsed?.date || getTodayIST();
+          // Safe Date: If no OCR date, use original created_time in IST! NEVER default to getTodayIST() for old items!
+          let targetDate = ocrParsed?.date;
+          if (!targetDate) {
+            const cd = page.created_time ? new Date(page.created_time) : new Date();
+            const ist = new Date(cd.getTime() + (5.5 * 60 * 60 * 1000));
+            targetDate = ist.toISOString().split('T')[0];
+          }
+
           const targetCategory = ocrParsed?.category || '🍜 Food Bill';
           const targetAccount = ocrParsed?.account || 'Kotak Mahindra/PhonePe';
 
@@ -405,9 +449,14 @@ async function runQuickCaptureSync() {
             };
           }
 
+          let expUpdated = false;
           if (syncedId) {
-            await notionReq(`/v1/pages/${syncedId}`, 'PATCH', { properties: expProps });
-          } else {
+            try {
+              const patchRes = await notionReq(`/v1/pages/${syncedId}`, 'PATCH', { properties: expProps });
+              if (patchRes && !patchRes.error && patchRes.id) expUpdated = true;
+            } catch (e) { expUpdated = false; }
+          }
+          if (!expUpdated) {
             const newExp = await notionReq('/v1/pages', 'POST', { parent: { database_id: DB_EXPENSES }, properties: expProps });
             syncedId = newExp?.id;
           }
