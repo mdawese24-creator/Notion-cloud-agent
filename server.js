@@ -546,15 +546,30 @@ const KNOWLEDGE_VAULT = {
          `• *UPI ID:* \`8123912392@kotak811\`\n\n` +
          `📋 *Ready to Copy:* \`5449154932\``,
 
-  allBanks: `🏦 *Awais Bank Accounts Vault:*\n\n` +
-            `1️⃣ *State Bank of India (SBI):*\n` +
+  indianBank: `🏦 *Indian Bank (Siruguppa Branch) — Abba (Mehaboob Basha)*\n\n` +
+              `• *Account Holder:* Mehaboob Basha\n` +
+              `• *Registered Mobile:* \`9945161755\`\n` +
+              `• *UPI PIN:* \`9945\`\n` +
+              `• *Branch:* Siruguppa, Ballari\n` +
+              `• *ATM Status:* New ATM card lena gaon trip me scheduled hai (20 min work, Abba sign zaroori).`,
+
+  airtelPostpaid: `📱 *Airtel Postpaid SIMs (Abba & Ammi):*\n\n` +
+                  `• *Status:* Dono SIM portal me add ho chuke hain aur active hain.\n` +
+                  `• *Bill Generation Date:* Har mahine ki *18th* date ko bill aayega.\n` +
+                  `• *Auto-Pay Reminder:* Kal sham *5:00 PM (28-Oct-2026)* ka reminder Kaam Tracker me set hai!`,
+
+  allBanks: `🏦 *Family Bank Accounts Vault:*\n\n` +
+            `1️⃣ *State Bank of India (SBI Siruguppa) — Awais:*\n` +
             `• A/C: \`62378030320\`\n` +
             `• IFSC: \`SBIN0040119\`\n` +
             `• UPI: \`8123912392@ybl\`\n\n` +
-            `2️⃣ *Kotak Mahindra Bank (811):*\n` +
+            `2️⃣ *Kotak Mahindra Bank (811) — Awais:*\n` +
             `• A/C: \`5449154932\`\n` +
             `• IFSC: \`KKBK0008296\`\n` +
-            `• UPI: \`8123912392@kotak811\``,
+            `• UPI: \`8123912392@kotak811\`\n\n` +
+            `3️⃣ *Indian Bank (Siruguppa) — Abba (Mehaboob Basha):*\n` +
+            `• Mobile: \`9945161755\`\n` +
+            `• UPI PIN: \`9945\``,
 
   voter: `🗳️ *Family Voter IDs (EPIC Numbers):*\n\n` +
          `• *Mohammed Awese (Awais):* \`UBB2822708\`\n` +
@@ -564,7 +579,10 @@ const KNOWLEDGE_VAULT = {
          `  Form 8 Ref: \`S10092O8C1610261200021\` (Mobile 7619574514 linked)\n\n` +
          `📍 *Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur, Siruguppa, Ballari - 583121`,
 
-  passwords: `🔑 *Quick Passcodes & Wi-Fi Vault:*\n\n` +
+  passwords: `🔑 *Quick Passcodes, Logins & Wi-Fi Vault:*\n\n` +
+             `• *Amazon (mdawaiskhaji469@gmail.com):* \`MDawais123\`\n` +
+             `• *Abba Facebook Username:* \`MehaboobBasha24\`\n` +
+             `• *Abba Indian Bank UPI PIN:* \`9945\`\n` +
              `• *Laptop Screen Lock:* \`552552\`\n` +
              `• *MS OneNote Password:* \`552552\`\n` +
              `• *Anvi Folder Locker:* \`552552\`\n` +
@@ -606,15 +624,21 @@ async function handleSmartAssistant(text) {
     return KNOWLEDGE_VAULT.gaon;
   }
 
-  // 2. TATKAL TICKET
+  // 2. TATKAL TICKET & IRCTC
   if (lower.includes('tatkal') || lower.includes('train') || lower.includes('irctc') || lower.includes('ticket')) {
-    return `🚆 *Tatkal Train Ticket Booking Details (Thane to Adoni):*\n\n` +
-           `• *Journey Date:* 31-Oct-2026 (Gaon Trip)\n` +
-           `• *Booking Date:* *30-Oct-2026* (Kal parso)\n` +
-           `• *AC Tatkal:* 10:00 AM sharp\n` +
-           `• *Sleeper Tatkal:* 11:00 AM sharp\n` +
-           `• IRCTC User: MDawais (PIN: 5525) / mdawais (Aadhaar linked 24-ticket enable)\n\n` +
-           `⏰ Kaam Tracker me reminder set hai 30-Oct 09:50 AM ka!`;
+    return `🚆 *IRCTC & Tatkal Ticket Booking Details:*\n\n` +
+           `• *Abba New IRCTC Account (Ready):*\n` +
+           `  - Username / User ID: \`MDawais\`\n` +
+           `  - Profile Name: Mehaboob Basha\n` +
+           `  - Mobile: \`9945161755\`\n` +
+           `  - Email: \`mehaboobbasha469@gmail.com\`\n` +
+           `  - MPIN: \`5525\`\n\n` +
+           `• *Awais IRCTC Account Status:*\n` +
+           `  - Cooldown active (recently released mobile from profile).\n` +
+           `  - ⏰ *1-Month Reminder Set:* 27-Nov-2026 ko fresh profile create karni hai with \`mdawese24@gmail.com\` & \`8123912392\`.\n\n` +
+           `• *Tatkal Booking (31-Oct Gaon Trip):*\n` +
+           `  - Booking Date: *30-Oct-2026* (AC: 10:00 AM | Sleeper: 11:00 AM)\n` +
+           `  - Route: Thane to Adoni`;
   }
 
   // 3. SHALU BHAI & SHADI INVITATION
@@ -629,8 +653,33 @@ async function handleSmartAssistant(text) {
     return KNOWLEDGE_VAULT.shadi;
   }
 
-  // 4. BANK DETAILS
-  if (lower.includes('sbi') || (lower.includes('bank') && (lower.includes('state') || lower.includes('detail') || lower.includes('khata') || lower.includes('account')) && !lower.includes('kotak') && !lower.includes('indian'))) {
+  // 4. AIRTEL POSTPAID & BILLS
+  if (lower.includes('airtel') || lower.includes('postpaid') || lower.includes('auto pay') || lower.includes('autopay') || (lower.includes('bill') && !lower.includes('food'))) {
+    return KNOWLEDGE_VAULT.airtelPostpaid;
+  }
+
+  // 5. FACEBOOK / FB
+  if (lower.includes('facebook') || lower.includes('fb')) {
+    return `👤 *Abba Facebook Account Details:*\n\n` +
+           `• *Username:* \`MehaboobBasha24\`\n` +
+           `• *Profile Name:* Mehaboob Basha\n` +
+           `• *Email / ID:* \`mehaboobbasha469@gmail.com\`\n` +
+           `• *Saved in:* Master Vault (Family Connected Apps)`;
+  }
+
+  // 6. AMAZON PASSWORD
+  if (lower.includes('amazon')) {
+    return `📦 *Amazon Account Credentials:*\n\n` +
+           `• *Login Email:* \`mdawaiskhaji469@gmail.com\`\n` +
+           `• *New Password:* \`MDawais123\`\n` +
+           `• *Updated in:* Notion Credentials Vault DB 2`;
+  }
+
+  // 7. BANK DETAILS
+  if (lower.includes('indian bank') || lower.includes('indian') || (lower.includes('abba') && lower.includes('bank'))) {
+    return KNOWLEDGE_VAULT.indianBank;
+  }
+  if (lower.includes('sbi') || (lower.includes('bank') && (lower.includes('state') || lower.includes('detail') || lower.includes('khata') || lower.includes('account')) && !lower.includes('kotak'))) {
     if (lower.includes('kotak') || lower.includes('sab') || lower.includes('dono')) {
       return KNOWLEDGE_VAULT.allBanks;
     }
@@ -638,13 +687,6 @@ async function handleSmartAssistant(text) {
   }
   if (lower.includes('kotak') || lower.includes('811')) {
     return KNOWLEDGE_VAULT.kotak;
-  }
-  if (lower.includes('indian bank') || lower.includes('atm')) {
-    return `🏦 *Indian Bank ATM Card Work (Siruguppa):*\n\n` +
-           `• *Task:* Indian Bank Siruguppa branch jakar naya ATM card lena\n` +
-           `• *Duration:* Sirf 20 minute ka work\n` +
-           `• *Requirement:* Abba ke signature hone hain\n` +
-           `• *Status:* ⏳ Pending (Gaon jaane ke baad karna hai)`;
   }
   if ((lower.includes('bank') && lower.includes('account')) || lower.includes('khata') || lower.includes('paisa bhejna') || lower.includes('bank details')) {
     return KNOWLEDGE_VAULT.allBanks;
