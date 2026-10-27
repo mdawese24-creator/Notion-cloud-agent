@@ -27,6 +27,18 @@ const MONTH_MAP = {
   jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
 };
 
+function convert12to24(timeStr) {
+  if (!timeStr) return '12:00:00';
+  const m = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
+  if (!m) return '12:00:00';
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  const ampm = m[3].toLowerCase();
+  if (ampm === 'pm' && h < 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${min}:00`;
+}
+
 function toTitleCase(str) {
   return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
@@ -213,8 +225,10 @@ function parseReceiptDetails(userText, ocrText, createdDate) {
 
   // Account
   let account = 'Kotak Mahindra/PhonePe';
-  if (lower.includes('state bank') || lower.includes('@sbi') || lower.includes('xxx0320') || lower.includes('xxx1055')) {
+  if (lower.includes('state bank') || lower.includes('@sbi') || lower.includes('0320') || lower.includes('1055')) {
     account = 'State Bank Of India/PhonePe';
+  } else if (lower.includes('4932') || lower.includes('kotak') || lower.includes('@kotak')) {
+    account = 'Kotak Mahindra/PhonePe';
   } else if (lower.includes('cash')) {
     account = 'Cash';
   }
@@ -362,59 +376,68 @@ async function runQuickCaptureSync() {
         summaryText = `Added pending task to Kaam Tracker: "${cleanTitle}"`;
       } else {
         // Daily Expense
-        let amount = ocrParsed?.amount;
-        if (!amount) {
-          // Explicit currency match FIRST
-          const curMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)/i) ||
-                           text.match(/([\d,]+(?:\.\d+)?)\s*(?:rs|rupaye|rupees|inr)\b/i);
-          if (curMatch) {
-            amount = parseFloat(curMatch[1].replace(/,/g, ''));
-          } else {
-            // Only if text contains explicit expense intent keywords
-            const hasExpenseKeyword = lower.includes('kharch') || lower.includes('spent') || lower.includes('diya') ||
-                                      lower.includes('liya') || lower.includes('paid') || lower.includes('chai') ||
-                                      lower.includes('fal') || lower.includes('petrol') || lower.includes('auto') ||
-                                      lower.includes('rapido') || lower.includes('rent') || lower.includes('food') ||
-                                      lower.includes('nashta') || lower.includes('breakfast') || lower.includes('lunch') ||
-                                      lower.includes('dinner') || lower.includes('shopping') || lower.includes('recharge') ||
-                                      lower.includes('bill');
-            if (hasExpenseKeyword) {
-              const sanitizedForNum = text
-                .replace(/\b(?:5g|4g|3g|nova\s*\d+|iphone\s*\d+|s\d+|a\d+|step\s*\d+)\b/gi, '')
-                .replace(/\b\d{6,}\b/g, ''); // ignore OTPs/Pincodes
-              const numMatch = sanitizedForNum.match(/\b(\d+(?:,\d+)*(?:\.\d+)?)\b/);
-              if (numMatch) {
-                const val = parseFloat(numMatch[1].replace(/,/g, ''));
-                if (val > 0 && val < 100000) amount = val;
+        // SAFETY FIRST: If an image is attached, DO NOT blindly create a Daily Expense row unless OCR succeeded with a verified date AND amount!
+        if (hasImages && (!ocrParsed?.amount || !ocrParsed?.date)) {
+          handledCategory = '📝 Note / Other';
+          summaryText = `Receipt photo saved. OCR verification pending or manual check needed (prevented dummy expense).`;
+        } else {
+          let amount = ocrParsed?.amount;
+          if (!amount) {
+            // Explicit currency match FIRST
+            const curMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)/i) ||
+                             text.match(/([\d,]+(?:\.\d+)?)\s*(?:rs|rupaye|rupees|inr)\b/i);
+            if (curMatch) {
+              amount = parseFloat(curMatch[1].replace(/,/g, ''));
+            } else {
+              // Only if text contains explicit expense intent keywords
+              const hasExpenseKeyword = lower.includes('kharch') || lower.includes('spent') || lower.includes('diya') ||
+                                        lower.includes('liya') || lower.includes('paid') || lower.includes('chai') ||
+                                        lower.includes('fal') || lower.includes('petrol') || lower.includes('auto') ||
+                                        lower.includes('rapido') || lower.includes('rent') || lower.includes('food') ||
+                                        lower.includes('nashta') || lower.includes('breakfast') || lower.includes('lunch') ||
+                                        lower.includes('dinner') || lower.includes('shopping') || lower.includes('recharge') ||
+                                        lower.includes('bill');
+              if (hasExpenseKeyword) {
+                const sanitizedForNum = text
+                  .replace(/\b(?:5g|4g|3g|nova\s*\d+|iphone\s*\d+|s\d+|a\d+|step\s*\d+)\b/gi, '')
+                  .replace(/\b\d{6,}\b/g, ''); // ignore OTPs/Pincodes
+                const numMatch = sanitizedForNum.match(/\b(\d+(?:,\d+)*(?:\.\d+)?)\b/);
+                if (numMatch) {
+                  const val = parseFloat(numMatch[1].replace(/,/g, ''));
+                  if (val > 0 && val < 100000) amount = val;
+                }
               }
             }
           }
-        }
 
-        if (amount && amount > 0) {
-          let cleanName = text
-            .replace(/(?:rs\.?|inr|₹)\s*[\d,]+(?:\.\d+)?/gi, '')
-            .replace(/[\d,]+(?:\.\d+)?\s*(?:rs|rupaye|rupees|inr)/gi, '')
-            .replace(/\b(kotak|sbi|state bank|cash|phonepe|gpay|paytm|debit card|debit|credit|account|spent|kharcha|diya|liya|paid|bhai|aaj|pe|se|ko|add|kardo|kar do|daily|expensive|expenses|entry)\b/gi, '')
-            .trim();
+          if (amount && amount > 0) {
+            let cleanName = text
+              .replace(/(?:rs\.?|inr|₹)\s*[\d,]+(?:\.\d+)?/gi, '')
+              .replace(/[\d,]+(?:\.\d+)?\s*(?:rs|rupaye|rupees|inr)/gi, '')
+              .replace(/\b(kotak|sbi|state bank|cash|phonepe|gpay|paytm|debit card|debit|credit|account|spent|kharcha|diya|liya|paid|bhai|aaj|pe|se|ko|add|kardo|kar do|daily|expensive|expenses|entry)\b/gi, '')
+              .trim();
 
-          if ((!cleanName || cleanName.length < 2) && ocrParsed?.paidTo) {
-            cleanName = ocrParsed.paidTo;
-          } else if (!cleanName || cleanName.length < 2) {
-            cleanName = ocrParsed?.category || 'Daily Expense';
-          }
-          cleanName = toTitleCase(cleanName);
+            if ((!cleanName || cleanName.length < 2) && ocrParsed?.paidTo) {
+              cleanName = ocrParsed.paidTo;
+            } else if (!cleanName || cleanName.length < 2) {
+              cleanName = (ocrParsed?.category && ocrParsed.category !== '🍜 Food Bill') ? ocrParsed.category : (text || 'Daily Expense');
+            }
+            cleanName = toTitleCase(cleanName);
 
-          // Safe Date: If no OCR date, use original created_time in IST! NEVER default to getTodayIST() for old items!
-          let targetDate = ocrParsed?.date;
-          if (!targetDate) {
-            const cd = page.created_time ? new Date(page.created_time) : new Date();
-            const ist = new Date(cd.getTime() + (5.5 * 60 * 60 * 1000));
-            targetDate = ist.toISOString().split('T')[0];
-          }
+            // Safe Date: If OCR date and time available, use exact ISO datetime!
+            let targetDate = null;
+            if (ocrParsed?.date && ocrParsed?.time) {
+              targetDate = `${ocrParsed.date}T${convert12to24(ocrParsed.time)}.000+05:30`;
+            } else if (ocrParsed?.date) {
+              targetDate = ocrParsed.date;
+            } else {
+              const cd = page.created_time ? new Date(page.created_time) : new Date();
+              const ist = new Date(cd.getTime() + (5.5 * 60 * 60 * 1000));
+              targetDate = ist.toISOString().split('T')[0];
+            }
 
-          const targetCategory = ocrParsed?.category || '🍜 Food Bill';
-          const targetAccount = ocrParsed?.account || 'Kotak Mahindra/PhonePe';
+            const targetCategory = ocrParsed?.category || '🍜 Food Bill';
+            const targetAccount = ocrParsed?.account || 'Kotak Mahindra/PhonePe';
 
           const expProps = {
             Name: { title: [{ text: { content: cleanName } }] },
@@ -475,6 +498,7 @@ async function runQuickCaptureSync() {
           summaryText = `Added to Daily Expenses: ₹${amount} (${cleanName}) on ${targetDate} via ${targetAccount.split('/')[0]}`;
         }
       }
+    }
 
       if (!handledCategory) {
         handledCategory = '📝 Note / Other';
