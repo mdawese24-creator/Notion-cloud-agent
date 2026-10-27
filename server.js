@@ -644,20 +644,19 @@ async function handleSmartAssistant(rawText) {
   // =========================================================
   // 5. GAON TRIP & TATKAL TICKET & IRCTC
   // =========================================================
-  if (hasKeyword(normalized, ['tatkal', 'train', 'irctc', 'ticket', 'adoni', 'cooldown'])) {
-    return `🚆 *IRCTC & Tatkal Train Booking Details:*\n\n` +
-           `• *Abba New IRCTC Account (Ready):*\n` +
-           `  - User ID / Username: \`MDawais\`\n` +
-           `  - Profile Name: Mehaboob Basha\n` +
-           `  - Mobile: \`9945161755\`\n` +
-           `  - Email: \`mehaboobbasha469@gmail.com\`\n` +
-           `  - MPIN: \`5525\`\n\n` +
-           `• *Awais IRCTC Account Status:*\n` +
-           `  - Cooldown active (recently released mobile from profile).\n` +
-           `  - ⏰ *1-Month Reminder Set:* 27-Nov-2026 ko \`mdawese24@gmail.com\` & \`8123912392\` se fresh profile banani hai!\n\n` +
-           `• *Tatkal Booking (31-Oct Gaon Trip):*\n` +
-           `  - Booking Date: *30-Oct-2026* (AC: 10:00 AM | Sleeper: 11:00 AM)\n` +
-           `  - Route: Thane to Adoni`;
+  if (hasKeyword(normalized, ['tatkal', 'train', 'irctc', 'ticket', 'adoni', 'thane', 'return'])) {
+    return `🚆 *IRCTC & Tatkal Train Booking Details (31-Oct se 03-Nov Gaon Trip):*\n\n` +
+           `1️⃣ *Going Tatkal (Thane to Adoni — 31-Oct Journey):*\n` +
+           `• *Booking Date:* *30-Oct-2026*\n` +
+           `• *Sleeper Tatkal:* *11:00 AM sharp* (Reminder set for 10:50 AM)\n` +
+           `• *AC Tatkal:* 10:00 AM sharp\n\n` +
+           `2️⃣ *Return Tatkal (Adoni to Thane — 03-Nov Journey):*\n` +
+           `• *Ticket Planning Reminder:* Kal *28-Oct dopahar 12:00 PM*\n` +
+           `• *Actual Tatkal Booking Date:* *02-Nov-2026*\n` +
+           `• *Sleeper Tatkal:* *11:00 AM sharp* (Reminder set for 02-Nov 10:50 AM)\n\n` +
+           `3️⃣ *IRCTC Accounts:*\n` +
+           `• Abba: User ID \`MDawais\` (PIN: 5525) / Mobile \`9945161755\`\n` +
+           `• Awais: 30-day cooldown active (Reminder: 27-Nov-2026)`;
   }
 
   if (hasKeyword(normalized, ['gaon', 'goau', 'trip', 'chutti', '4 din'])) {
@@ -665,8 +664,15 @@ async function handleSmartAssistant(rawText) {
   }
 
   // =========================================================
-  // 6. SHALU BHAI CALL & SHAADI INVITATION LIST
+  // 6. SHALU BHAI CALL, PRIYANKA KURLA & SHAADI LIST
   // =========================================================
+  if (hasKeyword(normalized, ['priyanka', 'kurla'])) {
+    return `📞 *Priyanka (Kurla Airtel Store) Call Reminder:*\n\n` +
+           `• *Time:* Kal Dopahar *1:00 PM* (28-Oct-2026)\n` +
+           `• *Context:* Shalu bhai se subah 11:05 AM baat complete hone ke baad, Kurla Airtel store wali ladki Priyanka se baat/follow-up karna hai.\n\n` +
+           `⏰ Reminder Kaam Tracker me successfully saved hai!`;
+  }
+
   if (hasKeyword(normalized, ['shalu', 'shaadi', 'wedding', 'mehman', 'invite', 'engagement'])) {
     if (hasKeyword(normalized, ['call', 'sim', 'kal', 'time', 'reminder'])) {
       return `📞 *Shalu Bhai Call Reminder (Kaam Tracker):*\n\n` +
@@ -844,10 +850,12 @@ async function handleSmartAssistant(rawText) {
   // =========================================================
   if (hasKeyword(normalized, ['kaam', 'task', 'pending', 'todo', 'karna hai', 'reminder', 'reminders'])) {
     if (hasKeyword(normalized, ['kal', 'tomorrow'])) {
-      return `📋 *Kal (28-Oct-2026) Ke Scheduled Reminders:*\n\n` +
-             `1. 📞 *11:05 AM:* Shalu bhai sim wale ko call karna (SIM & Shaadi invitation)\n` +
-             `2. 📱 *05:00 PM:* Airtel Thanks App / Portal se Abba & Ammi numbers par Auto-Pay enable karna (18th monthly bill cycle)\n\n` +
-             `✅ Dono tasks Kaam Tracker me ⏰ Reminder ke sath saved hain!`;
+      return `📋 *Kal (28-Oct-2026) Ke Scheduled Reminders & Tasks:*\n\n` +
+             `1. 📞 *11:05 AM:* Shalu bhai SIM wale ko call karna (SIM & Shaadi invitation discussion)\n` +
+             `2. 🚆 *12:00 PM:* Return Train Ticket planning (Adoni to Thane — 03-Nov check)\n` +
+             `3. 📞 *01:00 PM:* Priyanka (Kurla Airtel Store) se baat karna\n` +
+             `4. 📱 *05:00 PM:* Airtel Thanks App / Portal se Abba & Ammi numbers par Auto-Pay enable karna (18th monthly bill cycle)\n\n` +
+             `✅ Chaaron tasks Kaam Tracker me ⏰ Reminder ke sath saved hain!`;
     }
 
     const res = await notionReq(`/v1/databases/${DB_KAAM}/query`, 'POST', {
