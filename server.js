@@ -525,8 +525,229 @@ async function runQuickCaptureSync() {
 }
 
 // -------------------------------------------------------------
-// 6. Telegram Bot Integration (Long Polling)
 // -------------------------------------------------------------
+// 6. Telegram Bot Integration & Smart Assistant Engine
+// -------------------------------------------------------------
+const KNOWLEDGE_VAULT = {
+  sbi: `🏦 *State Bank of India (SBI Siruguppa)*\n\n` +
+       `• *Account Holder:* S A Mohammed Awese\n` +
+       `• *Account No:* \`62378030320\`\n` +
+       `• *IFSC Code:* \`SBIN0040119\`\n` +
+       `• *Branch:* Siruguppa, Ballari\n` +
+       `• *PhonePe / Mobile:* \`8123912392\`\n` +
+       `• *UPI ID:* \`8123912392@ybl\`\n\n` +
+       `📋 *Ready to Copy:* \`62378030320\``,
+
+  kotak: `🏦 *Kotak Mahindra Bank (Kotak 811 Online)*\n\n` +
+         `• *Account Holder:* S A Mohammed Awese\n` +
+         `• *Account No:* \`5449154932\`\n` +
+         `• *IFSC Code:* \`KKBK0008296\`\n` +
+         `• *PhonePe / Mobile:* \`8123912392\`\n` +
+         `• *UPI ID:* \`8123912392@kotak811\`\n\n` +
+         `📋 *Ready to Copy:* \`5449154932\``,
+
+  allBanks: `🏦 *Awais Bank Accounts Vault:*\n\n` +
+            `1️⃣ *State Bank of India (SBI):*\n` +
+            `• A/C: \`62378030320\`\n` +
+            `• IFSC: \`SBIN0040119\`\n` +
+            `• UPI: \`8123912392@ybl\`\n\n` +
+            `2️⃣ *Kotak Mahindra Bank (811):*\n` +
+            `• A/C: \`5449154932\`\n` +
+            `• IFSC: \`KKBK0008296\`\n` +
+            `• UPI: \`8123912392@kotak811\``,
+
+  voter: `🗳️ *Family Voter IDs (EPIC Numbers):*\n\n` +
+         `• *Mohammed Awese (Awais):* \`UBB2822708\`\n` +
+         `  Form 8 Ref: \`S10092O8C2909261200065\` (Address: 141 A Desanur)\n\n` +
+         `• *Abba (Mehaboob Basha):* \`UBB1404151\` (Approved & Active)\n\n` +
+         `• *Mahammad Athif (Atif):* \`UBB3353083\`\n` +
+         `  Form 8 Ref: \`S10092O8C1610261200021\` (Mobile 7619574514 linked)\n\n` +
+         `📍 *Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur, Siruguppa, Ballari - 583121`,
+
+  passwords: `🔑 *Quick Passcodes & Wi-Fi Vault:*\n\n` +
+             `• *Laptop Screen Lock:* \`552552\`\n` +
+             `• *MS OneNote Password:* \`552552\`\n` +
+             `• *Anvi Folder Locker:* \`552552\`\n` +
+             `• *Signal App PIN:* \`552552\`\n\n` +
+             `🌐 *Wi-Fi Passwords:*\n` +
+             `• *Bangalore PG Wi-Fi:* \`7204572981\`\n` +
+             `• *Ghansoli PG Wi-Fi:* \`9167982677\``,
+
+  epfo: `📝 *EPFO / PF Details:*\n\n` +
+        `• *UAN Number:* \`101380566434\`\n` +
+        `• *UAN Password:* \`MDawais123@@\`\n` +
+        `• *Grievance Reg No:* \`DELWE/E/2026/05154\`\n` +
+        `• *Registration No:* \`DLCPM260250164900\``
+};
+
+async function handleSmartAssistant(text) {
+  const lower = (text || '').toLowerCase().trim();
+
+  // 1. BANK DETAILS
+  if (lower.includes('sbi') || (lower.includes('bank') && (lower.includes('state') || lower.includes('detail') || lower.includes('khata') || lower.includes('account')) && !lower.includes('kotak'))) {
+    if (lower.includes('kotak') || lower.includes('sab') || lower.includes('dono')) {
+      return KNOWLEDGE_VAULT.allBanks;
+    }
+    return KNOWLEDGE_VAULT.sbi;
+  }
+  if (lower.includes('kotak') || lower.includes('811')) {
+    return KNOWLEDGE_VAULT.kotak;
+  }
+  if ((lower.includes('bank') && lower.includes('account')) || lower.includes('khata') || lower.includes('paisa bhejna') || lower.includes('bank details')) {
+    return KNOWLEDGE_VAULT.allBanks;
+  }
+
+  // 2. VOTER ID & OFFICIAL DOCUMENTS
+  if (lower.includes('voter') || lower.includes('epic') || lower.includes('form 8') || lower.includes('pan card') || lower.includes('aadhaar') || lower.includes('address') || lower.includes('desanur')) {
+    return KNOWLEDGE_VAULT.voter;
+  }
+
+  // 3. PASSWORDS & WIFI
+  if (lower.includes('wifi') || lower.includes('wi-fi') || lower.includes('password') || lower.includes('screen lock') || lower.includes('pin') || lower.includes('locker')) {
+    return KNOWLEDGE_VAULT.passwords;
+  }
+
+  // 4. EPFO & PF
+  if (lower.includes('pf') || lower.includes('epfo') || lower.includes('uan')) {
+    return KNOWLEDGE_VAULT.epfo;
+  }
+
+  // 5. SHALU / SIM SPECIFIC TASK
+  if (lower.includes('shalu') || lower.includes('new sim')) {
+    return `📞 *Shalu Bhai Call Task (Kaam Tracker):*\n\n` +
+           `• *Task:* Kal shalu bhai ku call Karna new sim regarding\n` +
+           `• *Status:* ⏳ Pending\n` +
+           `• *Date:* 2026-10-27\n\n` +
+           `✅ Ye task Notion me *📋 Kaam Tracker* ke andar safely saved hai!`;
+  }
+
+  // 6. AXIS BANK TASK
+  if (lower.includes('axis')) {
+    return `🏦 *Abba Axis Bank Task (Kaam Tracker):*\n\n` +
+           `• *Task:* Abba ka Axis Bank ka details nikalo\n` +
+           `• *Status:* ⏳ Pending\n` +
+           `• *Date:* 2026-10-27\n\n` +
+           `✅ Ye task *📋 Kaam Tracker* me pending state me saved hai!`;
+  }
+
+  // 7. PENDING KAAM / TASKS QUESTION
+  if (lower.includes('pending') || lower.includes('kaam') || lower.includes('task') || lower.includes('todo')) {
+    const res = await notionReq(`/v1/databases/${DB_KAAM}/query`, 'POST', {
+      filter: { property: 'Status', select: { equals: '⏳ Pending' } },
+      page_size: 8
+    });
+    const tasks = (res.results || []).map((r, i) => {
+      const title = r.properties.Name?.title?.[0]?.plain_text || 'Untitled';
+      const dt = r.properties['Today Date']?.date?.start || '';
+      return `${i + 1}. ⏳ *${title}* ${dt ? '(' + dt + ')' : ''}`;
+    });
+    return `📋 *Kaam Tracker me Active Pending Tasks:*\n\n${tasks.length ? tasks.join('\n\n') : '🎉 Sabhi kaam complete hain!'}`;
+  }
+
+  // 8. TODAY'S KHARCHA
+  if (lower.includes('kharcha') || lower.includes('today') || lower.includes('aaj') || lower.includes('expense')) {
+    const today = getTodayIST();
+    const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
+      filter: { property: 'Date', date: { on_or_after: today } },
+      sorts: [{ property: 'Date', direction: 'descending' }]
+    });
+    let total = 0;
+    const items = (expRes.results || []).map(r => {
+      const amt = r.properties?.['Amount (₹)']?.number || 0;
+      const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
+      const cat = r.properties?.Category?.select?.name || '';
+      total += amt;
+      return `• *₹${amt}* — ${name} (${cat})`;
+    });
+    return `📊 *Aaj ka Kharcha (${today}):*\n\n${items.join('\n') || 'Aaj abhi tak koi kharcha add nahi hua hai.'}\n\n💰 *Total Kharcha:* ₹${total.toFixed(2)}`;
+  }
+
+  // 9. RECHARGE QUESTION
+  if (lower.includes('recharge')) {
+    const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
+      filter: { property: 'Category', select: { equals: '📱 Mobile Recharge' } },
+      sorts: [{ property: 'Date', direction: 'descending' }],
+      page_size: 5
+    });
+    const list = (res.results || []).map(r => {
+      const amt = r.properties?.['Amount (₹)']?.number || 0;
+      const name = r.properties?.Name?.title?.[0]?.plain_text || 'Recharge';
+      const d = (r.properties?.Date?.date?.start || '').split('T')[0];
+      return `• *₹${amt}* — ${name} (${d})`;
+    });
+    return `📱 *Recent Recharges:*\n\n${list.join('\n') || 'Koi recharge record nahi mila!'}`;
+  }
+
+  // 10. SALARY
+  if (lower.includes('salary') || lower.includes('kamai')) {
+    return `💼 *Bharti Airtel Salary Records:*\n\n` +
+           `• *Monthly Salary:* ₹20,000+ (Credited to SBI)\n` +
+           `• *Night Allowance:* ₹1,350 (Credited 21-Oct to SBI)\n` +
+           `• Official reimbursement (DTH ₹1,800) pending claim in Kaam Tracker.`;
+  }
+
+  // 11. EXPLICIT ADD COMMANDS
+  if (lower.startsWith('add task:') || lower.startsWith('task:') || lower.startsWith('kaam:')) {
+    const clean = text.replace(/^(add task:|task:|kaam:)\s*/i, '').trim();
+    if (clean) {
+      await notionReq('/v1/pages', 'POST', {
+        parent: { database_id: DB_KAAM },
+        properties: {
+          Name: { title: [{ text: { content: clean } }] },
+          Status: { select: { name: '⏳ Pending' } },
+          'Today Date': { date: { start: getTodayIST() } }
+        }
+      });
+      return `✅ *Naya Task Add Ho Gaya Kaam Tracker me:*\n\n⏳ "${clean}"`;
+    }
+  }
+
+  // 12. GENERAL NOTION EXPENSE SEARCH
+  const cleanWord = lower.replace(/bhai|bahi|ek|bar|acche|dekho|kya|kab|kitna|kaha|kaise|tha|ta|hai|huwa|hua|ko|me|se|kar|do|kardo/g, '').trim().split(' ')[0];
+  if (cleanWord.length > 2) {
+    const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
+      filter: {
+        or: [
+          { property: 'Name', title: { contains: cleanWord } },
+          { property: 'Reason / Details', rich_text: { contains: cleanWord } }
+        ]
+      },
+      page_size: 5
+    });
+    if (res.results && res.results.length) {
+      const list = res.results.map(r => {
+        const amt = r.properties['Amount (₹)']?.number || 0;
+        const name = r.properties.Name?.title?.[0]?.plain_text || 'Item';
+        const d = (r.properties.Date?.date?.start || '').split('T')[0];
+        return `• *₹${amt}* — ${name} (${d})`;
+      });
+      return `🔍 *"${cleanWord}" ke records mile:*\n\n${list.join('\n')}`;
+    }
+  }
+
+  // 13. IF USER WANTS TO SAVE AS NOTE
+  if (!lower.includes('?') && !lower.includes('batao') && !lower.includes('kya') && !lower.includes('kaise')) {
+    await notionReq('/v1/pages', 'POST', {
+      parent: { database_id: DB_CAPTURE },
+      properties: {
+        'Note / Baat': { title: [{ text: { content: text } }] },
+        'Status': { select: { name: '⏳ New' } }
+      }
+    });
+    return `✅ Quick Capture me add ho gaya: "${text}". Auto-sync ise turant process kar raha hai!`;
+  }
+
+  // DEFAULT
+  return `🤖 *Awais Smart Assistant:*\n\n` +
+         `Aap mujhse kabhi bhi pooch sakte hain:\n` +
+         `• 🏦 *"SBI bank details"* ya *"Kotak details"*\n` +
+         `• 📋 *"Pending kaam"* ya *"Tasks"*\n` +
+         `• 💰 *"Aaj ka kharcha"* ya *"Recharges"*\n` +
+         `• 🗳️ *"Voter ID"* ya *"Family Address"*\n` +
+         `• 🔑 *"Wi-Fi password"* ya *"Laptop PIN"*\n` +
+         `• 📝 *"Shalu call task"* ya *"Axis bank"*`;
+}
+
 let telegramOffset = 0;
 function telegramApi(method, body) {
   return new Promise((resolve) => {
@@ -547,206 +768,9 @@ function telegramApi(method, body) {
       });
     });
     req.on('error', () => resolve({ ok: false }));
-    req.write(data);
+    if (data) req.write(data);
     req.end();
   });
-}
-
-
-// -------------------------------------------------------------
-// 6. Smart Telegram Brain (Intelligent QA + Query + Auto-Sync)
-// -------------------------------------------------------------
-async function handleTelegramMessage(text) {
-  const lower = text.toLowerCase().trim();
-
-  const isQuestion = lower.includes('?') || 
-                     lower.includes('kab') || 
-                     lower.includes('kitna') || 
-                     lower.includes('kitne') || 
-                     lower.includes('kya') || 
-                     lower.includes('kaha') || 
-                     lower.includes('kaise') || 
-                     lower.includes('batao') || 
-                     lower.includes('check') || 
-                     lower.includes('dekh') || 
-                     lower.includes('last') || 
-                     lower.includes('status') ||
-                     lower.includes('pending') ||
-                     lower.includes('update sahi');
-
-  // A. RECHARGE QUESTION
-  if (lower.includes('recharge') && (isQuestion || lower.includes('last') || lower.includes('history'))) {
-    let target = '';
-    let isStrictB = false;
-    let isStrictC = false;
-
-    if (lower.includes('b.nani') || lower.includes('b nani') || lower.includes('badi nani') || lower.includes('b-nani') || lower.includes('srif b') || lower.includes('sirf b')) {
-      target = 'B. Nani (Badi Nani)';
-      isStrictB = true;
-    } else if (lower.includes('c.nani') || lower.includes('c nani') || lower.includes('choti nani') || lower.includes('chhoti nani') || lower.includes('c-nani')) {
-      target = 'C. Nani (Chhoti Nani)';
-      isStrictC = true;
-    } else if (lower.includes('nani')) {
-      target = 'Nani';
-    } else if (lower.includes('abba') || lower.includes('baba')) {
-      target = 'Abba';
-    } else if (lower.includes('ammi')) {
-      target = 'Ammi';
-    } else if (lower.includes('atif')) {
-      target = 'Atif';
-    } else if (lower.includes('jio')) {
-      target = 'Jio';
-    } else if (lower.includes('airtel')) {
-      target = 'Airtel';
-    }
-
-    const filter = {
-      or: [
-        { property: 'Name', title: { contains: 'recharge' } },
-        { property: 'Reason / Details', rich_text: { contains: 'recharge' } }
-      ]
-    };
-
-    const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
-      filter,
-      sorts: [{ property: 'Date', direction: 'descending' }],
-      page_size: 20
-    });
-
-    let matches = res.results || [];
-    if (isStrictB) {
-      matches = matches.filter(r => {
-        const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
-        const isC = title.includes('c nani') || title.includes('c.nani') || title.includes('c .nani') || title.includes('choti') || title.includes('chhoti');
-        return !isC && (title.includes('b.nani') || title.includes('b nani') || title.includes('b .nani') || title.includes('badi'));
-      });
-    } else if (isStrictC) {
-      matches = matches.filter(r => {
-        const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
-        return title.includes('c nani') || title.includes('c.nani') || title.includes('c .nani') || title.includes('choti') || title.includes('chhoti');
-      });
-    } else if (target) {
-      matches = matches.filter(r => {
-        const title = (r.properties.Name?.title?.[0]?.plain_text || '').toLowerCase();
-        const details = (r.properties['Reason / Details']?.rich_text?.[0]?.plain_text || '').toLowerCase();
-        return title.includes(target.toLowerCase()) || details.includes(target.toLowerCase());
-      });
-    }
-
-    if (matches.length > 0) {
-      const list = matches.slice(0, 5).map(r => {
-        const amt = r.properties['Amount (₹)']?.number || 0;
-        const name = r.properties.Name?.title?.[0]?.plain_text || 'Recharge';
-        const d = r.properties.Date?.date?.start || 'No date';
-        const dateStr = d.split('T')[0];
-        return `• *₹${amt}* — ${name} (${dateStr})`;
-      });
-
-      const latest = matches[0];
-      const latestAmt = latest.properties['Amount (₹)']?.number || 0;
-      const latestDate = (latest.properties.Date?.date?.start || '').split('T')[0];
-      const latestName = latest.properties.Name?.title?.[0]?.plain_text || 'Recharge';
-
-      return `📱 *Recharge Record${target ? ' (' + target.toUpperCase() + ')' : ''}:*\n\n` +
-             `✅ *Latest Recharge:* ₹${latestAmt} on *${latestDate}* (${latestName})\n\n` +
-             `📜 *Pichhli History:*\n${list.join('\n')}`;
-    } else {
-      return `📱 Recharge ka koi record nahi mila${target ? ' for ' + target : ''} bhai!`;
-    }
-  }
-
-  // B. PENDING KAAM / TASKS QUESTION
-  if (lower.includes('pending') || (lower.includes('kaam') && isQuestion) || lower.includes('task') || lower.includes('todo')) {
-    const res = await notionReq(`/v1/databases/${DB_KAAM}/query`, 'POST', {
-      filter: { property: 'Status', select: { equals: '⏳ Pending' } },
-      page_size: 8
-    });
-
-    const tasks = (res.results || []).map((r, i) => {
-      const title = r.properties.Name?.title?.[0]?.plain_text || r.properties.Task?.title?.[0]?.plain_text || 'Untitled';
-      return `${i + 1}. ⏳ ${title}`;
-    });
-
-    return `📋 *Kaam Tracker me Top Pending Tasks:*\n\n${tasks.length ? tasks.join('\n\n') : 'Koi pending task nahi hai, sab complete hai!'}`;
-  }
-
-  // C. SALARY QUESTION
-  if (lower.includes('salary') || lower.includes('kamai') || (lower.includes('credit') && isQuestion)) {
-    const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
-      filter: { property: 'Category', select: { equals: 'Salary' } },
-      sorts: [{ property: 'Date', direction: 'descending' }],
-      page_size: 3
-    });
-
-    if (res.results && res.results.length) {
-      const latest = res.results[0];
-      const amt = latest.properties['Amount (₹)']?.number || 0;
-      const date = (latest.properties.Date?.date?.start || '').split('T')[0];
-      const name = latest.properties.Name?.title?.[0]?.plain_text || 'Salary';
-      return `💼 *Salary Credit Record:*\n\n✅ *Latest:* ₹${amt.toLocaleString('en-IN')} on *${date}*\n(${name})`;
-    }
-    return `Koi salary credit record nahi mila bhai!`;
-  }
-
-  // D. SYSTEM STATUS / SYNC QUESTION
-  if (lower.includes('update') || lower.includes('proper') || lower.includes('sync') || lower.includes('status')) {
-    return `🟢 *System & Sync Status:* 100% ONLINE!\n\n` +
-           `• Quick Capture: All entries processed & live synced.\n` +
-           `• Daily Expenses: 37 Receipts with exact Date & Time.\n` +
-           `• Cloud Worker: Render par 24/7 bina laptop ke chal raha hai!`;
-  }
-
-  // E. TODAY'S KHARCHA
-  if (lower.includes('kharcha') || lower.includes('today') || lower.includes('aaj')) {
-    const today = getTodayIST();
-    const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
-      filter: { property: 'Date', date: { equals: today } }
-    });
-    let total = 0;
-    const items = (expRes.results || []).map(r => {
-      const amt = r.properties?.['Amount (₹)']?.number || 0;
-      const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
-      total += amt;
-      return `• ₹${amt} - ${name}`;
-    });
-    return `📊 *Aaj ka Kharcha (${today}):*\n\n${items.join('\n') || 'Aaj abhi tak koi kharcha nahi hua!'}\n\n💰 *Total:* ₹${total}`;
-  }
-
-  // F. GENERAL EXPENSE SEARCH
-  if (isQuestion) {
-    const cleanWord = lower.replace(/bhai|bahi|ek|bar|acche|dekho|kya|kab|kitna|kaha|kaise|tha|ta|hai|huwa|hua|ko|me|se|kar|do|kardo/g, '').trim().split(' ')[0];
-    if (cleanWord.length > 2) {
-      const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
-        filter: {
-          or: [
-            { property: 'Name', title: { contains: cleanWord } },
-            { property: 'Reason / Details', rich_text: { contains: cleanWord } }
-          ]
-        },
-        page_size: 5
-      });
-      if (res.results && res.results.length) {
-        const list = res.results.map(r => {
-          const amt = r.properties['Amount (₹)']?.number || 0;
-          const name = r.properties.Name?.title?.[0]?.plain_text || 'Item';
-          const d = (r.properties.Date?.date?.start || '').split('T')[0];
-          return `• *₹${amt}* — ${name} (${d})`;
-        });
-        return `🔍 *"${cleanWord}" ke records mile:*\n\n${list.join('\n')}`;
-      }
-    }
-    return `🤔 Bhai, iske baare me Notion me koi record nahi mila. Agar aap ise Naye Task ya Kharche ke roop me add karna chahte hain, to bas likhein:\n"Add: ${text}"`;
-  }
-
-  // G. IF NOT A QUESTION -> ADD TO QUICK CAPTURE
-  await notionReq('/v1/pages', 'POST', {
-    parent: { database_id: DB_CAPTURE },
-    properties: {
-      'Note / Baat': { title: [{ text: { content: text } }] },
-      'Status': { select: { name: '⏳ New' } }
-    }
-  });
-  return `✅ Quick Capture me add ho gaya: "${text}". Auto-sync ise turant process kar raha hai!`;
 }
 
 async function pollTelegram() {
@@ -762,10 +786,10 @@ async function pollTelegram() {
           if (text === '/start') {
             await telegramApi('sendMessage', {
               chat_id: chatId,
-              text: `👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\nAap mujhse baatein bhi kar sakte hain aur hisaab bhi:\n🔍 "B.nani ka last recharge kab Kiya ta"\n📊 "Aaj ka kharcha"\n📋 "Pending kaam batao"\n💼 "Salary aayi kya"\n✍️ Naya kharcha likhein (ex: Chai 20rs cash)\n📸 Receipt bhejein\n\nAapka laptop band ho to bhi ye cloud me 24/7 chalta rahega!`
+              text: `👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\nAap mujhse kisi bhi waqt sawaal pooch sakte hain:\n🏦 "SBI bank details" ya "Kotak account"\n📋 "Pending kaam"\n💰 "Aaj ka kharcha"\n🗳️ "Voter ID"\n🔑 "Wi-Fi password"\n📞 "Shalu call task"\n\nAapka laptop band ho to bhi ye cloud me 24/7 chalta rahega!`
             });
           } else if (text) {
-            const reply = await handleTelegramMessage(text);
+            const reply = await handleSmartAssistant(text);
             await telegramApi('sendMessage', {
               chat_id: chatId,
               text: reply,
@@ -781,21 +805,204 @@ async function pollTelegram() {
   setTimeout(pollTelegram, 1000);
 }
 
-// 7. Health HTTP Server (Required by Cloud Providers)
 // -------------------------------------------------------------
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    status: 'ONLINE',
-    service: "Awais 24/7 Notion Cloud Agent",
-    time: new Date().toISOString(),
-    istDate: getTodayIST(),
-    laptopRequired: false
-  }));
+// 7. Mobile Web Assistant & HTTP Server
+// -------------------------------------------------------------
+function getWebUIHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Awais Pocket Brain ⚡</title>
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; padding: 16px; padding-bottom: 80px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #1e293b; }
+    .title { font-size: 20px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .badge { background: #059669; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    
+    .search-box { position: relative; margin-bottom: 20px; }
+    .search-input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #fff; padding: 14px 44px 14px 16px; border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: #38bdf8; }
+    .search-btn { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 36px; background: #38bdf8; border: none; border-radius: 8px; color: #0f172a; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 600; margin-bottom: 10px; }
+    .quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; scrollbar-width: none; }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .chip { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 8px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .chip:active { background: #334155; }
+    
+    .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 14px; cursor: pointer; transition: transform 0.1s, border-color 0.2s; position: relative; }
+    .card:active { transform: scale(0.98); border-color: #38bdf8; }
+    .card-icon { font-size: 24px; margin-bottom: 8px; }
+    .card-name { font-size: 14px; font-weight: 600; color: #f1f5f9; }
+    .card-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .copy-tag { position: absolute; right: 10px; top: 10px; font-size: 10px; background: #334155; color: #38bdf8; padding: 2px 6px; border-radius: 6px; }
+
+    .result-card { background: #1e293b; border: 1px solid #38bdf8; border-radius: 14px; padding: 16px; margin-bottom: 24px; display: none; }
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #38bdf8; font-weight: 600; }
+    .result-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #f8fafc; word-break: break-word; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; z-index: 999; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title"><span>⚡</span> Awais Pocket Brain</div>
+    <div class="badge">ONLINE 24/7</div>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="queryInput" class="search-input" placeholder="Poochho: SBI details, Aaj ka kharcha, Pending kaam..." />
+    <button class="search-btn" onclick="sendQuery()">➔</button>
+  </div>
+
+  <div class="quick-chips">
+    <div class="chip" onclick="askQuick('mere sbi bank ka sara details dedo')">🏦 SBI Details</div>
+    <div class="chip" onclick="askQuick('kotak account no batao')">🏦 Kotak Bank</div>
+    <div class="chip" onclick="askQuick('pending kaam dikhao')">📋 Pending Kaam</div>
+    <div class="chip" onclick="askQuick('aaj ka kharcha kitna hua')">💰 Aaj ka Kharcha</div>
+    <div class="chip" onclick="askQuick('voter id details')">🗳️ Voter IDs</div>
+    <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi & PINs</div>
+    <div class="chip" onclick="askQuick('kal shalu ko call karna hai kya status hai')">📞 Shalu Call Task</div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <span>AI ASSISTANT JAWAB:</span>
+      <span onclick="closeResult()" style="cursor:pointer; color:#ef4444;">✕ Close</span>
+    </div>
+    <div class="result-body" id="resultBody"></div>
+  </div>
+
+  <div class="section-title">⚡ Instant Bank Details (1-Tap Copy)</div>
+  <div class="cards-grid">
+    <div class="card" onclick="copyText('62378030320', 'SBI A/C: 62378030320')">
+      <div class="copy-tag">Copy A/C</div>
+      <div class="card-icon">🔵</div>
+      <div class="card-name">SBI Siruguppa</div>
+      <div class="card-sub">62378030320</div>
+      <div class="card-sub" style="color:#64748b; font-size:11px;">IFSC: SBIN0040119</div>
+    </div>
+    <div class="card" onclick="copyText('5449154932', 'Kotak A/C: 5449154932')">
+      <div class="copy-tag">Copy A/C</div>
+      <div class="card-icon">🔴</div>
+      <div class="card-name">Kotak 811</div>
+      <div class="card-sub">5449154932</div>
+      <div class="card-sub" style="color:#64748b; font-size:11px;">IFSC: KKBK0008296</div>
+    </div>
+    <div class="card" onclick="copyText('8123912392@ybl', 'UPI: 8123912392@ybl')">
+      <div class="copy-tag">Copy UPI</div>
+      <div class="card-icon">📱</div>
+      <div class="card-name">PhonePe / UPI</div>
+      <div class="card-sub">8123912392@ybl</div>
+      <div class="card-sub" style="color:#64748b; font-size:11px;">SBI linked</div>
+    </div>
+    <div class="card" onclick="copyText('552552', 'PIN: 552552')">
+      <div class="copy-tag">Copy PIN</div>
+      <div class="card-icon">🔑</div>
+      <div class="card-name">Device Passcode</div>
+      <div class="card-sub">552552</div>
+      <div class="card-sub" style="color:#64748b; font-size:11px;">Laptop/OneNote/Locker</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2000);
+    }
+
+    function copyText(val, label) {
+      navigator.clipboard.writeText(val).then(() => {
+        showToast('✅ ' + (label || 'Copied!'));
+      }).catch(() => {
+        showToast('Value: ' + val);
+      });
+    }
+
+    function askQuick(text) {
+      document.getElementById('queryInput').value = text;
+      sendQuery();
+    }
+
+    function closeResult() {
+      document.getElementById('resultCard').style.display = 'none';
+    }
+
+    async function sendQuery() {
+      const q = document.getElementById('queryInput').value.trim();
+      if (!q) return;
+      const card = document.getElementById('resultCard');
+      const body = document.getElementById('resultBody');
+      card.style.display = 'block';
+      body.innerText = 'Searching Notion & Vault... ⏳';
+      try {
+        const res = await fetch('/api/ask?q=' + encodeURIComponent(q));
+        const json = await res.json();
+        body.innerText = json.answer || 'Koi jawab nahi mila.';
+      } catch (e) {
+        body.innerText = 'Error querying assistant: ' + e.message;
+      }
+    }
+
+    document.getElementById('queryInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendQuery();
+    });
+  </script>
+</body>
+</html>`;
+}
+
+const server = http.createServer(async (req, res) => {
+  const urlObj = new URL(req.url, 'http://localhost');
+  const pathname = urlObj.pathname;
+
+  if (pathname === '/api/ask') {
+    let q = urlObj.searchParams.get('q') || '';
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      await new Promise(r => req.on('end', r));
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed.q || parsed.query) q = parsed.q || parsed.query;
+      } catch (e) {}
+    }
+    const answer = await handleSmartAssistant(q);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, query: q, answer: answer }));
+    return;
+  }
+
+  if (pathname === '/health' || pathname === '/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'ONLINE',
+      service: 'Awais 24/7 Pocket Brain & Cloud Agent',
+      time: new Date().toISOString(),
+      istDate: getTodayIST(),
+      laptopRequired: false
+    }));
+    return;
+  }
+
+  // Web UI on root
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(getWebUIHtml());
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 [Cloud Worker] Online on port ${PORT}. 24/7 Autonomous Sync Active!`);
+  console.log(`🚀 [Cloud Worker] Online on port ${PORT}. 24/7 Autonomous Sync & Smart Assistant Active!`);
   
   // Start 20-second Quick Capture Sync loop
   setInterval(runQuickCaptureSync, 20000);
@@ -806,7 +1013,7 @@ server.listen(PORT, () => {
 
   // Self-ping every 10 minutes to prevent Render free instance from sleeping
   setInterval(() => {
-    https.get('https://awais-notion-cloud-agent.onrender.com', (res) => {
+    https.get('https://awais-notion-cloud-agent.onrender.com/health', (res) => {
       console.log(`[Keep-Alive] Pinged self. Status: ${res.statusCode}`);
     }).on('error', (err) => {
       console.log(`[Keep-Alive] Ping error: ${err.message}`);
