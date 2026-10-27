@@ -577,14 +577,60 @@ const KNOWLEDGE_VAULT = {
         `• *UAN Number:* \`101380566434\`\n` +
         `• *UAN Password:* \`MDawais123@@\`\n` +
         `• *Grievance Reg No:* \`DELWE/E/2026/05154\`\n` +
-        `• *Registration No:* \`DLCPM260250164900\``
+        `• *Registration No:* \`DLCPM260250164900\``,
+
+  gaon: `🏡 *Gaon Trip Plan (31-Oct to 03-Nov 2026 - 4 Din Chutti):*\n\n` +
+        `🚆 *1. Tatkal Train Booking (30-Oct-2026):*\n` +
+        `• AC Tatkal opens: *10:00 AM*\n` +
+        `• Sleeper Tatkal opens: *11:00 AM* (Thane to Adoni)\n\n` +
+        `🎯 *2. Gaon Pahunchne Ke Baad Wale Kaam:*\n` +
+        `• 📱 *Sabse Pehle:* Abba ke mobile me "English to Kannada translate wala app" install & setup karna.\n` +
+        `• 🏦 *Bank Work (20 Mins):* Indian Bank Siruguppa jakar naya ATM card lena (Sirf Abba ke signature chahiye).\n` +
+        `• 📄 Atif ka color digital Voter ID PDF download karna (UBB3353083).\n` +
+        `• 🚰 Desanur ghar borewell ka estimation confirm karna.\n` +
+        `• 👥 Doston se milna: Sohail, Vivekananda, Khalandar.`,
+
+  shadi: `💍 *Shaadi (Wedding) Mehman & Invitation Master List:*\n\n` +
+         `⭐ *VIP / Special Friends:*\n` +
+         `• *Shalu bhai sim wale (Siruguppa)*\n` +
+         `  ⚠️ *Important Note:* Engagement me nahi bulaya tha to naraz hue the. Shaadi me 100% zaroor invite karna hai aur card personally dena hai taaki dil saaf ho sake!\n` +
+         `• Close Friends: Sohail, Vivekananda, Khalandar\n\n` +
+         `✅ Ye record Notion ke "💍 Shaadi Master Plan" page me safely added hai!`
 };
 
 async function handleSmartAssistant(text) {
   const lower = (text || '').toLowerCase().trim();
 
-  // 1. BANK DETAILS
-  if (lower.includes('sbi') || (lower.includes('bank') && (lower.includes('state') || lower.includes('detail') || lower.includes('khata') || lower.includes('account')) && !lower.includes('kotak'))) {
+  // 1. GAON PLAN & TASKS
+  if (lower.includes('gaon') || lower.includes('goau') || lower.includes('chutti') || lower.includes('trip') || lower.includes('desanur')) {
+    return KNOWLEDGE_VAULT.gaon;
+  }
+
+  // 2. TATKAL TICKET
+  if (lower.includes('tatkal') || lower.includes('train') || lower.includes('irctc') || lower.includes('ticket')) {
+    return `🚆 *Tatkal Train Ticket Booking Details (Thane to Adoni):*\n\n` +
+           `• *Journey Date:* 31-Oct-2026 (Gaon Trip)\n` +
+           `• *Booking Date:* *30-Oct-2026* (Kal parso)\n` +
+           `• *AC Tatkal:* 10:00 AM sharp\n` +
+           `• *Sleeper Tatkal:* 11:00 AM sharp\n` +
+           `• IRCTC User: MDawais (PIN: 5525) / mdawais (Aadhaar linked 24-ticket enable)\n\n` +
+           `⏰ Kaam Tracker me reminder set hai 30-Oct 09:50 AM ka!`;
+  }
+
+  // 3. SHALU BHAI & SHADI INVITATION
+  if (lower.includes('shalu') || lower.includes('shadi') || lower.includes('wedding') || lower.includes('mehman') || lower.includes('invite') || lower.includes('engagement')) {
+    if (lower.includes('call') || lower.includes('sim') || lower.includes('kal')) {
+      return `📞 *Shalu Bhai Call Reminder (Kaam Tracker):*\n\n` +
+             `• *Time:* Kal Subha *11:05 AM* (28-Oct-2026)\n` +
+             `• *Topic:* New SIM regarding follow-up\n` +
+             `• *Special Note:* Shaadi me zaroor invite karna hai (Engagement me miss hone par naraz the).\n\n` +
+             `⏰ Reminder Kaam Tracker me successfully saved hai!`;
+    }
+    return KNOWLEDGE_VAULT.shadi;
+  }
+
+  // 4. BANK DETAILS
+  if (lower.includes('sbi') || (lower.includes('bank') && (lower.includes('state') || lower.includes('detail') || lower.includes('khata') || lower.includes('account')) && !lower.includes('kotak') && !lower.includes('indian'))) {
     if (lower.includes('kotak') || lower.includes('sab') || lower.includes('dono')) {
       return KNOWLEDGE_VAULT.allBanks;
     }
@@ -593,35 +639,33 @@ async function handleSmartAssistant(text) {
   if (lower.includes('kotak') || lower.includes('811')) {
     return KNOWLEDGE_VAULT.kotak;
   }
+  if (lower.includes('indian bank') || lower.includes('atm')) {
+    return `🏦 *Indian Bank ATM Card Work (Siruguppa):*\n\n` +
+           `• *Task:* Indian Bank Siruguppa branch jakar naya ATM card lena\n` +
+           `• *Duration:* Sirf 20 minute ka work\n` +
+           `• *Requirement:* Abba ke signature hone hain\n` +
+           `• *Status:* ⏳ Pending (Gaon jaane ke baad karna hai)`;
+  }
   if ((lower.includes('bank') && lower.includes('account')) || lower.includes('khata') || lower.includes('paisa bhejna') || lower.includes('bank details')) {
     return KNOWLEDGE_VAULT.allBanks;
   }
 
-  // 2. VOTER ID & OFFICIAL DOCUMENTS
-  if (lower.includes('voter') || lower.includes('epic') || lower.includes('form 8') || lower.includes('pan card') || lower.includes('aadhaar') || lower.includes('address') || lower.includes('desanur')) {
+  // 5. VOTER ID & OFFICIAL DOCUMENTS
+  if (lower.includes('voter') || lower.includes('epic') || lower.includes('form 8') || lower.includes('pan card') || lower.includes('aadhaar') || lower.includes('address')) {
     return KNOWLEDGE_VAULT.voter;
   }
 
-  // 3. PASSWORDS & WIFI
+  // 6. PASSWORDS & WIFI
   if (lower.includes('wifi') || lower.includes('wi-fi') || lower.includes('password') || lower.includes('screen lock') || lower.includes('pin') || lower.includes('locker')) {
     return KNOWLEDGE_VAULT.passwords;
   }
 
-  // 4. EPFO & PF
+  // 7. EPFO & PF
   if (lower.includes('pf') || lower.includes('epfo') || lower.includes('uan')) {
     return KNOWLEDGE_VAULT.epfo;
   }
 
-  // 5. SHALU / SIM SPECIFIC TASK
-  if (lower.includes('shalu') || lower.includes('new sim')) {
-    return `📞 *Shalu Bhai Call Task (Kaam Tracker):*\n\n` +
-           `• *Task:* Kal shalu bhai ku call Karna new sim regarding\n` +
-           `• *Status:* ⏳ Pending\n` +
-           `• *Date:* 2026-10-27\n\n` +
-           `✅ Ye task Notion me *📋 Kaam Tracker* ke andar safely saved hai!`;
-  }
-
-  // 6. AXIS BANK TASK
+  // 8. AXIS BANK TASK
   if (lower.includes('axis')) {
     return `🏦 *Abba Axis Bank Task (Kaam Tracker):*\n\n` +
            `• *Task:* Abba ka Axis Bank ka details nikalo\n` +
@@ -630,11 +674,11 @@ async function handleSmartAssistant(text) {
            `✅ Ye task *📋 Kaam Tracker* me pending state me saved hai!`;
   }
 
-  // 7. PENDING KAAM / TASKS QUESTION
+  // 9. PENDING KAAM / TASKS QUESTION
   if (lower.includes('pending') || lower.includes('kaam') || lower.includes('task') || lower.includes('todo')) {
     const res = await notionReq(`/v1/databases/${DB_KAAM}/query`, 'POST', {
       filter: { property: 'Status', select: { equals: '⏳ Pending' } },
-      page_size: 8
+      page_size: 10
     });
     const tasks = (res.results || []).map((r, i) => {
       const title = r.properties.Name?.title?.[0]?.plain_text || 'Untitled';
@@ -644,7 +688,7 @@ async function handleSmartAssistant(text) {
     return `📋 *Kaam Tracker me Active Pending Tasks:*\n\n${tasks.length ? tasks.join('\n\n') : '🎉 Sabhi kaam complete hain!'}`;
   }
 
-  // 8. TODAY'S KHARCHA
+  // 10. TODAY'S KHARCHA
   if (lower.includes('kharcha') || lower.includes('today') || lower.includes('aaj') || lower.includes('expense')) {
     const today = getTodayIST();
     const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
@@ -662,7 +706,7 @@ async function handleSmartAssistant(text) {
     return `📊 *Aaj ka Kharcha (${today}):*\n\n${items.join('\n') || 'Aaj abhi tak koi kharcha add nahi hua hai.'}\n\n💰 *Total Kharcha:* ₹${total.toFixed(2)}`;
   }
 
-  // 9. RECHARGE QUESTION
+  // 11. RECHARGE QUESTION
   if (lower.includes('recharge')) {
     const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
       filter: { property: 'Category', select: { equals: '📱 Mobile Recharge' } },
@@ -678,7 +722,7 @@ async function handleSmartAssistant(text) {
     return `📱 *Recent Recharges:*\n\n${list.join('\n') || 'Koi recharge record nahi mila!'}`;
   }
 
-  // 10. SALARY
+  // 12. SALARY
   if (lower.includes('salary') || lower.includes('kamai')) {
     return `💼 *Bharti Airtel Salary Records:*\n\n` +
            `• *Monthly Salary:* ₹20,000+ (Credited to SBI)\n` +
@@ -686,7 +730,7 @@ async function handleSmartAssistant(text) {
            `• Official reimbursement (DTH ₹1,800) pending claim in Kaam Tracker.`;
   }
 
-  // 11. EXPLICIT ADD COMMANDS
+  // 13. EXPLICIT ADD COMMANDS
   if (lower.startsWith('add task:') || lower.startsWith('task:') || lower.startsWith('kaam:')) {
     const clean = text.replace(/^(add task:|task:|kaam:)\s*/i, '').trim();
     if (clean) {
@@ -702,7 +746,7 @@ async function handleSmartAssistant(text) {
     }
   }
 
-  // 12. GENERAL NOTION EXPENSE SEARCH
+  // 14. GENERAL NOTION EXPENSE SEARCH
   const cleanWord = lower.replace(/bhai|bahi|ek|bar|acche|dekho|kya|kab|kitna|kaha|kaise|tha|ta|hai|huwa|hua|ko|me|se|kar|do|kardo/g, '').trim().split(' ')[0];
   if (cleanWord.length > 2) {
     const res = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
@@ -725,7 +769,7 @@ async function handleSmartAssistant(text) {
     }
   }
 
-  // 13. IF USER WANTS TO SAVE AS NOTE
+  // 15. IF USER WANTS TO SAVE AS NOTE
   if (!lower.includes('?') && !lower.includes('batao') && !lower.includes('kya') && !lower.includes('kaise')) {
     await notionReq('/v1/pages', 'POST', {
       parent: { database_id: DB_CAPTURE },
@@ -740,12 +784,13 @@ async function handleSmartAssistant(text) {
   // DEFAULT
   return `🤖 *Awais Smart Assistant:*\n\n` +
          `Aap mujhse kabhi bhi pooch sakte hain:\n` +
+         `• 🏡 *"Gaon plan"* ya *"Tatkal ticket"*\n` +
+         `• 💍 *"Shaadi guest list"* ya *"Shalu bhai call"*\n` +
          `• 🏦 *"SBI bank details"* ya *"Kotak details"*\n` +
          `• 📋 *"Pending kaam"* ya *"Tasks"*\n` +
          `• 💰 *"Aaj ka kharcha"* ya *"Recharges"*\n` +
          `• 🗳️ *"Voter ID"* ya *"Family Address"*\n` +
-         `• 🔑 *"Wi-Fi password"* ya *"Laptop PIN"*\n` +
-         `• 📝 *"Shalu call task"* ya *"Axis bank"*`;
+         `• 🔑 *"Wi-Fi password"* ya *"Laptop PIN"*`;
 }
 
 let telegramOffset = 0;
@@ -786,7 +831,7 @@ async function pollTelegram() {
           if (text === '/start') {
             await telegramApi('sendMessage', {
               chat_id: chatId,
-              text: `👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\nAap mujhse kisi bhi waqt sawaal pooch sakte hain:\n🏦 "SBI bank details" ya "Kotak account"\n📋 "Pending kaam"\n💰 "Aaj ka kharcha"\n🗳️ "Voter ID"\n🔑 "Wi-Fi password"\n📞 "Shalu call task"\n\nAapka laptop band ho to bhi ye cloud me 24/7 chalta rahega!`
+              text: `👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\nAap mujhse kisi bhi waqt sawaal pooch sakte hain:\n🏡 "Gaon plan" ya "Tatkal ticket"\n💍 "Shaadi guest list" ya "Shalu bhai call"\n🏦 "SBI bank details" ya "Kotak account"\n📋 "Pending kaam"\n💰 "Aaj ka kharcha"\n🗳️ "Voter ID"\n🔑 "Wi-Fi password"\n\nAapka laptop band ho to bhi ye cloud me 24/7 chalta rahega!`
             });
           } else if (text) {
             const reply = await handleSmartAssistant(text);
@@ -858,18 +903,21 @@ function getWebUIHtml() {
   </div>
 
   <div class="search-box">
-    <input type="text" id="queryInput" class="search-input" placeholder="Poochho: SBI details, Aaj ka kharcha, Pending kaam..." />
+    <input type="text" id="queryInput" class="search-input" placeholder="Poochho: Gaon plan, SBI details, Shalu call, Tatkal..." />
     <button class="search-btn" onclick="sendQuery()">➔</button>
   </div>
 
   <div class="quick-chips">
+    <div class="chip" onclick="askQuick('gaon plan')">🏡 Gaon Plan (31-Oct)</div>
+    <div class="chip" onclick="askQuick('tatkal ticket booking')">🚆 Tatkal Booking</div>
+    <div class="chip" onclick="askQuick('shalu bhai call reminder')">📞 Shalu Call (11:05 AM)</div>
+    <div class="chip" onclick="askQuick('shaadi invitation guest list')">💍 Shaadi Guest List</div>
     <div class="chip" onclick="askQuick('mere sbi bank ka sara details dedo')">🏦 SBI Details</div>
     <div class="chip" onclick="askQuick('kotak account no batao')">🏦 Kotak Bank</div>
     <div class="chip" onclick="askQuick('pending kaam dikhao')">📋 Pending Kaam</div>
     <div class="chip" onclick="askQuick('aaj ka kharcha kitna hua')">💰 Aaj ka Kharcha</div>
     <div class="chip" onclick="askQuick('voter id details')">🗳️ Voter IDs</div>
     <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi & PINs</div>
-    <div class="chip" onclick="askQuick('kal shalu ko call karna hai kya status hai')">📞 Shalu Call Task</div>
   </div>
 
   <div class="result-card" id="resultCard">
