@@ -539,15 +539,16 @@ const KNOWLEDGE_VAULT = {
         `• *Grievance Reg No:* \`DELWE/E/2026/05154\`\n` +
         `• *Registration No:* \`DLCPM260250164900\``,
 
-  gaon: `🏡 *Gaon Trip Plan (31-Oct to 03-Nov 2026 - 4 Din Chutti):*\n\n` +
-        `🚆 *1. Tatkal Train Booking (30-Oct-2026):*\n` +
-        `• AC Tatkal opens: *10:00 AM*\n` +
-        `• Sleeper Tatkal opens: *11:00 AM* (Thane to Adoni)\n\n` +
-        `🎯 *2. Gaon Pahunchne Ke Baad Wale Kaam:*\n` +
-        `• 📱 *Sabse Pehle:* Abba ke mobile me "English to Kannada translate wala app" install & setup karna.\n` +
-        `• 🏦 *Bank Work (20 Mins):* Indian Bank Siruguppa jakar naya ATM card lena (Sirf Abba ke signature chahiye).\n` +
-        `• 📄 Atif ka color digital Voter ID PDF download karna (UBB3353083).\n` +
-        `• 🚰 Desanur ghar borewell ka estimation confirm karna.\n` +
+  gaon: `🏡 *Hometown / Native Place Trips Record:*\n\n` +
+        `📌 *Latest Completed Visit (Trip 5 — 24 to 26 Oct 2026):*\n` +
+        `• *Travel:* 24-Oct raat 9:00 PM train Thane se nikle, 25-Oct gaon stay kiya.\n` +
+        `• *Works Done:* Abba ko new 5G mobile ("Ai Nova 2 Ultra") handover kiya, Abba aur Ammi ke ported Airtel postpaid SIMs activate kiye, Abba ka Indian Bank UPI PIN 9945 set kiya.\n` +
+        `• *Return:* 25-Oct raat ki train se nikle, 26-Oct morning Mumbai pahunch kar directly Bharti Airtel Second Shift duty attend ki (Zero leave taken!).\n\n` +
+        `🎯 *Upcoming Next Visit (Trip 6 — 31-Oct to 03-Nov 2026 - 4 Din Chutti):*\n` +
+        `• 🎫 *30-Oct Tatkal Booking:* AC @ 10:00 AM | Sleeper @ 11:00 AM (Thane to Adoni)\n` +
+        `• 📱 Abba ke mobile me "English to Kannada translate wala app" install karna.\n` +
+        `• 🏦 Indian Bank Siruguppa jakar naya ATM card lena (20 min work).\n` +
+        `• 🚰 Desanur ghar borewell ka estimation final karna.\n` +
         `• 👥 Doston se milna: Sohail, Vivekananda, Khalandar.`,
 
   shadi: `💍 *Shaadi (Wedding) Mehman & Invitation Master List:*\n\n` +
