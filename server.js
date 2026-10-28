@@ -603,14 +603,18 @@ const KNOWLEDGE_VAULT = {
   gaon: `🏡 *Hometown / Native Place Trips Record:*\n\n` +
         `📌 *Latest Completed Visit (Trip 5 — 24 to 26 Oct 2026):*\n` +
         `• *Travel:* 24-Oct raat 9:00 PM train Thane se nikle, 25-Oct gaon stay kiya.\n` +
-        `• *Works Done:* Abba ko new 5G mobile ("Ai Nova 2 Ultra") handover kiya, Abba aur Ammi ke ported Airtel postpaid SIMs activate kiye, Abba ka Indian Bank UPI PIN 9945 set kiya.\n` +
-        `• *Return:* 25-Oct raat ki train se nikle, 26-Oct morning Mumbai pahunch kar directly Bharti Airtel Second Shift duty attend ki (Zero leave taken!).\n\n` +
+        `• *Works Done:* Abba ko new 5G mobile handover kiya, Abba & Ammi Airtel ported SIMs activate kiye, Abba ka Indian Bank UPI PIN 9945 set kiya.\n` +
+        `• *Return:* 25-Oct raat ki train se nikle, 26-Oct morning Mumbai pahunch kar Airtel Second Shift duty attend ki.\n\n` +
         `🎯 *Upcoming Next Visit (Trip 6 — 31-Oct to 03-Nov 2026 - 4 Din Chutti):*\n` +
         `• 🎫 *30-Oct Tatkal Booking:* AC @ 10:00 AM | Sleeper @ 11:00 AM (Thane to Adoni)\n` +
-        `• 📱 Abba ke mobile me "English to Kannada translate wala app" install karna.\n` +
-        `• 🏦 Indian Bank Siruguppa jakar naya ATM card lena (20 min work).\n` +
-        `• 🚰 Desanur ghar borewell ka estimation final karna.\n` +
-        `• 👥 Doston se milna: Sohail, Vivekananda, Khalandar.`,
+        `• 📜 *Khaji Sahab (SGP):* Siruguppa ke Khaji Sahab se Abba ka Marriage Certificate lena.\n` +
+        `• 📱 *Tasleem SIM:* Tasleem ji ko new SIM lena aur Attaullah bhaiya ko dena.\n` +
+        `• 🪪 *PAN-Aadhaar DOB:* Abba ka PAN-Aadhaar linking ke liye sahi Date of Birth confirm karke apply karna.\n` +
+        `• 🔌 *Chargers:* Vivo ka charger lena (Abba ke mobile ka) aur Dukan wala charger lena.\n` +
+        `• 📱 *Translation App:* Abba ke mobile me "English to Kannada translate wala app" install karna.\n` +
+        `• 🏦 *Indian Bank:* Siruguppa jakar naya ATM card lena (20 min work, sirf Abba ke signature).\n` +
+        `• 🚰 *Borewell:* Desanur ghar borewell ka estimation final karna.\n` +
+        `• 👥 *Friends:* Sohail, Vivekananda, Khalandar se milna.`,
 
   shadi: `💍 *Shaadi (Wedding) Mehman & Invitation Master List:*\n\n` +
          `⭐ *VIP / Special Friends:*\n` +
@@ -1135,15 +1139,32 @@ async function handleSmartAssistant(rawText) {
 }
 
 // -------------------------------------------------------------
-// 7. Telegram Bot Polling (Crash-Proof with Plain-Text Fallback)
+// 7. Telegram Bot Polling & Autonomous Push Alert Dispatcher
 // -------------------------------------------------------------
 let telegramOffset = 0;
+let primaryTelegramChatId = process.env.TELEGRAM_CHAT_ID || null;
+const CHAT_FILE = path.join(__dirname, 'telegram_chat.json');
+
+try {
+  if (fs.existsSync(CHAT_FILE)) {
+    const d = JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8'));
+    if (d.chatId) primaryTelegramChatId = d.chatId;
+  }
+} catch(e) {}
+
+function saveTelegramChatId(chatId) {
+  primaryTelegramChatId = chatId;
+  try {
+    fs.writeFileSync(CHAT_FILE, JSON.stringify({ chatId: chatId, updatedAt: new Date().toISOString() }));
+  } catch(e) {}
+}
+
 function telegramApi(method, body) {
   return new Promise((resolve) => {
     const data = JSON.stringify(body || {});
     const req = https.request({
       hostname: 'api.telegram.org',
-      path: `/bot${TELEGRAM_TOKEN}/${method}`,
+      path: '/bot' + TELEGRAM_TOKEN + '/' + method,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1162,6 +1183,46 @@ function telegramApi(method, body) {
   });
 }
 
+const alertedReminders = new Set();
+async function checkAndSendReminders() {
+  if (!primaryTelegramChatId) return;
+  try {
+    const today = getTodayIST();
+    const res = await notionReq('/v1/databases/' + DB_KAAM + '/query', 'POST', {
+      filter: { property: 'Status', select: { equals: '⏳ Pending' } },
+      page_size: 30
+    });
+
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const currentTimeStr = String(currentHour).padStart(2, '0') + ':' + String(currentMin).padStart(2, '0');
+
+    for (const r of res.results || []) {
+      const id = r.id;
+      const title = r.properties.Name?.title?.[0]?.plain_text || 'Pending Task';
+      const reminderRaw = r.properties['⏰ Reminder / Date']?.date?.start || '';
+      if (!reminderRaw) continue;
+
+      if (reminderRaw.startsWith(today) && reminderRaw.includes('T')) {
+        const timePart = reminderRaw.split('T')[1].substring(0, 5);
+        const alertKey = id + '_' + today + '_' + timePart;
+        if (timePart <= currentTimeStr && !alertedReminders.has(alertKey)) {
+          alertedReminders.add(alertKey);
+          await telegramApi('sendMessage', {
+            chat_id: primaryTelegramChatId,
+            text: '⏰ *REMINDER ALERT (Awais Kaam Tracker)*\n\n📌 *Task:* ' + title + '\n⏰ *Scheduled Time:* ' + timePart + ' (Aaj)\n\n✅ Done karne ke liye Dashboard open karein:\nhttps://awais-notion-cloud-agent.onrender.com/',
+            parse_mode: 'Markdown'
+          });
+          console.log('[Alert Sent] Task: ' + title + ' -> Chat: ' + primaryTelegramChatId);
+        }
+      }
+    }
+  } catch(e) {
+    console.error('[Reminder Dispatch Error]', e.message);
+  }
+}
+
 async function pollTelegram() {
   try {
     const res = await telegramApi('getUpdates', { offset: telegramOffset, timeout: 20 });
@@ -1170,12 +1231,13 @@ async function pollTelegram() {
         telegramOffset = update.update_id + 1;
         if (update.message) {
           const chatId = update.message.chat.id;
+          saveTelegramChatId(chatId);
           const text = update.message.text || '';
 
           if (text === '/start') {
             await telegramApi('sendMessage', {
               chat_id: chatId,
-              text: `👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\nAap mujhse kisi bhi waqt sawaal pooch sakte hain ya direct note le sakte hain:\n🏡 "House no kya hai" ya "Ghar ka address"\n🚆 "Tatkal ticket" ya "Gaon plan"\n📞 "Shalu bhai call" ya "Shaadi guest list"\n📱 "Airtel postpaid bill"\n🏦 "SBI bank details" ya "Indian Bank"\n📋 "Pending kaam" ya "Kal ka kaam"\n💰 "Aaj ka kharcha" ya "October expenses"\n📝 "Recent notes" ya "Note: Koi baat"\n🔑 "Wi-Fi password" ya "Laptop PIN"\n\nAapka laptop band ho to bhi ye cloud me 24/7 chalta rahega!`
+              text: '👋 Assalamu Alaikum Awais Bhai! Main aapka 24/7 Smart Notion Assistant hu.\n\n🔔 *Aapka Phone Notifications ke liye Registered ho gaya hai!* Kaam Tracker ke sabhi scheduled reminders par aapko yahan instant notification aayega.\n\nAap mujhse kisi bhi waqt sawaal pooch sakte hain ya direct note le sakte hain:\n🏡 "House no kya hai"\n🚆 "Tatkal ticket" ya "Gaon plan"\n📞 "Shalu bhai call"\n📱 "Airtel postpaid bill"\n🏦 "SBI bank details" ya "Indian Bank"\n📋 "Pending kaam"\n💰 "Aaj ka kharcha" ya "Iss month ka kharcha"\n📝 "Note: Koi baat"\n🔑 "Wi-Fi password"\n\n🌐 Web Dashboard: https://awais-notion-cloud-agent.onrender.com/'
             });
           } else if (text) {
             const reply = await handleSmartAssistant(text);
@@ -1185,10 +1247,9 @@ async function pollTelegram() {
               parse_mode: 'Markdown'
             });
             if (!sendRes.ok) {
-              // Fallback to plain text if Markdown format fails
               await telegramApi('sendMessage', {
                 chat_id: chatId,
-                text: reply.replace(/[*`_]/g, '')
+                text: reply.replace(/[*_`]/g, '')
               });
             }
           }
@@ -1202,337 +1263,155 @@ async function pollTelegram() {
 }
 
 // -------------------------------------------------------------
-// 8. Responsive Modern Web Dashboard & Mobile Assistant UI
+// 7.1 Real-Time Dashboard Data Aggregator
+// -------------------------------------------------------------
+async function getDashboardPayload() {
+  const [expRes, kaamRes] = await Promise.all([
+    notionReq('/v1/databases/' + DB_EXPENSES + '/query', 'POST', {
+      filter: {
+        and: [
+          { property: 'Date', date: { on_or_after: '2026-10-01' } },
+          { property: 'Date', date: { on_or_before: '2026-10-31' } }
+        ]
+      },
+      sorts: [{ property: 'Date', direction: 'descending' }],
+      page_size: 100
+    }),
+    notionReq('/v1/databases/' + DB_KAAM + '/query', 'POST', {
+      filter: { property: 'Status', select: { equals: '⏳ Pending' } },
+      page_size: 60
+    })
+  ]);
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const cats = {};
+  const recentExp = [];
+
+  for (const r of expRes.results || []) {
+    const amt = r.properties?.['Amount (₹)']?.number || 0;
+    const cat = r.properties?.Category?.select?.name || 'Other';
+    const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
+    const d = (r.properties?.Date?.date?.start || '').split('T')[0];
+    const type = r.properties?.Type?.select?.name || (cat.toLowerCase().includes('salary') ? 'Income' : 'Expense');
+
+    if (type === 'Income' || cat.toLowerCase().includes('salary')) {
+      totalIncome += amt;
+    } else {
+      totalExpense += amt;
+      cats[cat] = (cats[cat] || 0) + amt;
+      if (recentExp.length < 8) {
+        recentExp.push({ name, cat, amount: amt, formatted: formatINR(amt), date: d });
+      }
+    }
+  }
+
+  const categoryList = Object.entries(cats)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, sum]) => ({
+      name,
+      amount: sum,
+      formatted: formatINR(sum),
+      percent: totalExpense > 0 ? ((sum / totalExpense) * 100).toFixed(1) : 0
+    }));
+
+  const allTasks = (kaamRes.results || []).map(r => ({
+    id: r.id,
+    title: r.properties.Name?.title?.[0]?.plain_text || 'Untitled',
+    reminder: r.properties['⏰ Reminder / Date']?.date?.start || '',
+    date: r.properties['Today Date']?.date?.start || '',
+    status: r.properties.Status?.select?.name || '⏳ Pending'
+  }));
+
+  const gaonTasks = allTasks.filter(t => 
+    t.title.toLowerCase().includes('gaon') || 
+    t.title.toLowerCase().includes('tatkal') || 
+    t.title.toLowerCase().includes('khaji') || 
+    t.title.toLowerCase().includes('tasleem') || 
+    t.title.toLowerCase().includes('charger') || 
+    t.title.toLowerCase().includes('marriage') || 
+    t.title.toLowerCase().includes('pan-aadhaar') || 
+    t.title.toLowerCase().includes('translate') || 
+    t.title.toLowerCase().includes('borewell') ||
+    t.title.toLowerCase().includes('indian bank')
+  );
+
+  return {
+    ok: true,
+    timeIST: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+    metrics: {
+      income: totalIncome,
+      incomeFormatted: formatINR(totalIncome),
+      expense: totalExpense,
+      expenseFormatted: formatINR(totalExpense),
+      savings: totalIncome - totalExpense,
+      savingsFormatted: formatINR(totalIncome - totalExpense),
+      savingsRate: totalIncome > 0 ? (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1) : 0,
+      pendingCount: allTasks.length,
+      categories: categoryList,
+      recentExpenses: recentExp,
+      threeMonth: {
+        'August 2026': { income: '₹32,654', expense: '₹17,979', savings: '₹14,675' },
+        'September 2026': { income: '₹34,589', expense: '₹20,977', savings: '₹13,612' },
+        'October 2026': { income: formatINR(totalIncome), expense: formatINR(totalExpense), savings: formatINR(totalIncome - totalExpense) },
+        'GrandTotal': { income: '₹1,14,593', expense: '₹77,303.61', savings: '₹37,289.39' }
+      }
+    },
+    tasks: allTasks,
+    gaonTasks: gaonTasks,
+    familyKYC: [
+      {
+        relation: '🧕 Ammi',
+        name: 'Reshma Banu',
+        voter: 'MZS1351410',
+        aadhaar: '9461 9458 9503',
+        pan: 'GOWPR0751B',
+        mobile: '6363498692',
+        dob: '01/01/1975',
+        details: 'Part 57, Serial 445 • Desanur'
+      },
+      {
+        relation: '👨 Abba',
+        name: 'Mehaboob Basha',
+        voter: 'UBB1404151',
+        aadhaar: '5595 (Last 4)',
+        pan: 'Pending DOB Link',
+        mobile: '9945161755',
+        bankPin: '9945 (Indian Bank UPI)',
+        details: 'Approved & Active • Desanur'
+      },
+      {
+        relation: '👦 Awais',
+        name: 'Mohammed Awese',
+        voter: 'UBB2822708',
+        aadhaar: '7694 5296 4584',
+        pan: 'DHWPM9916F',
+        mobile: '8123912392',
+        upi: '8123912392@ybl',
+        details: 'Form 8 Ref: S10092O8C2909261200065'
+      },
+      {
+        relation: '👦 Bhai',
+        name: 'Mahammad Athif (Atif)',
+        voter: 'UBB3353083',
+        aadhaar: '6687 0862 2572',
+        pan: 'DYMPA6781D',
+        mobile: '7619574514',
+        details: 'Active Linked • Desanur'
+      }
+    ]
+  };
+}
+
+// -------------------------------------------------------------
+// 8. Responsive Modern Master Dashboard & Executive Web App
 // -------------------------------------------------------------
 function getWebUIHtml() {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Awais Pocket Brain ⚡ | 24/7 Notion AI Hub</title>
-  <meta name="theme-color" content="#0b0f19">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card-bg: #131b2e;
-      --card-border: #1e293b;
-      --card-hover: #1e2942;
-      --primary: #38bdf8;
-      --primary-hover: #0ea5e9;
-      --accent: #10b981;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; padding-bottom: 90px; }
-    
-    .container { max-width: 840px; margin: 0 auto; }
-    
-    /* Header */
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--card-border); }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25); }
-    .brand-text { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
-    .badge-status { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .badge-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    /* Search Box */
-    .search-container { position: relative; margin-bottom: 16px; }
-    .search-input { width: 100%; background: var(--card-bg); border: 1px solid var(--card-border); color: #fff; padding: 15px 52px 15px 18px; border-radius: 14px; font-size: 15px; outline: none; transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
-    .search-btn { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 40px; background: linear-gradient(135deg, #0284c7, #38bdf8); border: none; border-radius: 10px; color: #0b0f19; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
-    .search-btn:active { transform: scale(0.95); }
-
-    /* Quick Chips */
-    .quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; scrollbar-width: none; }
-    .quick-chips::-webkit-scrollbar { display: none; }
-    .chip { background: var(--card-bg); border: 1px solid var(--card-border); color: #cbd5e1; padding: 8px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
-    .chip:hover { border-color: var(--primary); color: #fff; }
-    .chip:active { transform: scale(0.96); background: var(--card-hover); }
-
-    /* Result Card */
-    .result-card { background: var(--card-bg); border: 1px solid #0284c7; border-radius: 16px; padding: 18px; margin-bottom: 24px; display: none; box-shadow: 0 10px 30px rgba(2, 132, 199, 0.15); animation: fadeIn 0.25s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .result-close { cursor: pointer; color: #f87171; background: rgba(239, 68, 68, 0.1); padding: 3px 8px; border-radius: 6px; font-size: 11px; }
-    .result-body { font-size: 14.5px; line-height: 1.65; color: #f1f5f9; word-break: break-word; }
-    .result-body strong, .result-body b { color: #fff; font-weight: 700; }
-    .result-body code { background: #1e293b; color: #38bdf8; padding: 2px 7px; border-radius: 6px; font-size: 13.5px; font-family: monospace; border: 1px solid #334155; cursor: pointer; }
-    .result-body code:active { background: #38bdf8; color: #0b0f19; }
-
-    /* Navigation Tabs */
-    .tabs-nav { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px; overflow-x: auto; }
-    .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .tab-btn.active { background: rgba(56, 189, 248, 0.12); color: var(--primary); }
-
-    /* Sections */
-    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-
-    /* Cards Grid */
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 15px; cursor: pointer; transition: all 0.2s; position: relative; }
-    .card:hover { border-color: #334155; background: var(--card-hover); }
-    .card:active { transform: scale(0.98); border-color: var(--primary); }
-    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .card-icon { font-size: 22px; }
-    .copy-pill { font-size: 10.5px; background: rgba(56, 189, 248, 0.12); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-    .card-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-    .card-sub { font-size: 12.5px; color: var(--text-muted); line-height: 1.4; }
-
-    /* Note Input Strip */
-    .note-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; margin-bottom: 24px; display: flex; gap: 8px; }
-    .note-input { flex: 1; background: transparent; border: none; color: #fff; font-size: 14px; outline: none; }
-    .note-btn { background: var(--primary); border: none; border-radius: 8px; padding: 6px 14px; color: #0b0f19; font-weight: 700; font-size: 13px; cursor: pointer; }
-
-    /* Toast Notification */
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13.5px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.6); display: none; z-index: 999; animation: toastIn 0.2s ease; }
-    @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <div class="brand-icon">⚡</div>
-        <div>
-          <div class="brand-text">Awais Pocket Brain</div>
-          <div style="font-size:11px; color:#64748b;">Autonomous Notion AI Engine</div>
-        </div>
-      </div>
-      <div class="badge-status">
-        <span class="badge-dot"></span>
-        <span>ONLINE 24/7</span>
-      </div>
-    </div>
-
-    <!-- Smart Search Bar -->
-    <div class="search-container">
-      <input type="text" id="queryInput" class="search-input" placeholder="Poochho: House no, Nov expenses, Gaon plan, SBI, Wi-Fi..." />
-      <button class="search-btn" onclick="sendQuery()">➔</button>
-    </div>
-
-    <!-- Quick Chips -->
-    <div class="quick-chips">
-      <div class="chip" onclick="askQuick('Epic reshma')">🧕 Epic Reshma (Ammi)</div>
-      <div class="chip" onclick="askQuick('Dukan ka address')">🪑 Dukan (Tuba Furniture)</div>
-      <div class="chip" onclick="askQuick('Iss month ka kharcha')">📊 Is Mahine Ka Kharcha</div>
-      <div class="chip" onclick="askQuick('Last 3 mahine ka kharcha')">📈 Last 3 Mahine Ka Hisab</div>
-      <div class="chip" onclick="askQuick('income kitna hai aur expenses kitna hai')">💰 Income & Expense Hisab</div>
-      <div class="chip" onclick="askQuick('house no kya hai')">🏠 House No (141 A)</div>
-      <div class="chip" onclick="askQuick('aaj ka kharcha kitna hua')">💸 Aaj ka Kharcha</div>
-      <div class="chip" onclick="askQuick('pending kaam dikhao')">📋 Pending Kaam</div>
-      <div class="chip" onclick="askQuick('kal ka kaam kya hai')">⏰ Kal Ke Reminders</div>
-      <div class="chip" onclick="askQuick('gaon plan')">🏡 Gaon Plan (31-Oct)</div>
-      <div class="chip" onclick="askQuick('tatkal ticket booking')">🚆 Tatkal Booking</div>
-      <div class="chip" onclick="askQuick('shalu bhai call reminder')">📞 Shalu Call (11:05 AM)</div>
-      <div class="chip" onclick="askQuick('airtel postpaid bill kab aata hai')">📱 Airtel Postpaid (18th)</div>
-      <div class="chip" onclick="askQuick('mere sbi bank ka sara details dedo')">🏦 SBI Account</div>
-      <div class="chip" onclick="askQuick('abba ka indian bank details')">🏦 Abba Indian Bank</div>
-      <div class="chip" onclick="askQuick('recent notes dikhao')">📝 Recent Notes</div>
-      <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi & PINs</div>
-      <div class="chip" onclick="askQuick('khatabook udhar hisab')">🤝 Khatabook Ledger</div>
-    </div>
-
-    <!-- AI Response Card -->
-    <div class="result-card" id="resultCard">
-      <div class="result-header">
-        <span>🤖 AI ASSISTANT JAWAB:</span>
-        <span class="result-close" onclick="closeResult()">✕ Close</span>
-      </div>
-      <div class="result-body" id="resultBody"></div>
-    </div>
-
-    <!-- 1-Tap Quick Note Adder -->
-    <div class="section-title">
-      <span>📝 Quick Note / Brain Dump (Instant Save to Notion)</span>
-    </div>
-    <div class="note-box">
-      <input type="text" id="noteInput" class="note-input" placeholder="Koi bhi note ya baat likhein jo Notion me save karni ho..." />
-      <button class="note-btn" onclick="saveDirectNote()">Save</button>
-    </div>
-
-    <!-- 1-Tap Copy Vault Cards -->
-    <div class="section-title">
-      <span>⚡ Instant Copy Vault (1-Tap Copy for Mobile & Laptop)</span>
-    </div>
-    <div class="cards-grid">
-      <!-- Ammi Voter ID (EPIC) -->
-      <div class="card" onclick="copyText('MZS1351410', 'Ammi Voter ID: MZS1351410')">
-        <div class="card-top">
-          <div class="card-icon">🧕</div>
-          <div class="copy-pill">Copy EPIC</div>
-        </div>
-        <div class="card-title">Ammi Voter ID (EPIC)</div>
-        <div class="card-sub">Reshma Banu • MZS1351410 (Part 57, Serial 445)</div>
-      </div>
-
-      <!-- Tuba Furniture (Dukan) -->
-      <div class="card" onclick="copyText('Tuba Furniture, Boy\'s Hostel, Near Tipu Sultan Circle, Sindhanur Main Road, Siruguppa, Karnataka - 583121', 'Address: Tuba Furniture')">
-        <div class="card-top">
-          <div class="card-icon">🪑</div>
-          <div class="copy-pill">Copy Dukan Address</div>
-        </div>
-        <div class="card-title">Tuba Furniture (Dukan)</div>
-        <div class="card-sub">Near Tipu Sultan Circle, Siruguppa - 583121</div>
-      </div>
-
-      <!-- House Address -->
-      <div class="card" onclick="copyText('141 A, Near Jamiya Masjeed, Ward No 2, Desanur, Siruguppa, Ballari - 583121', 'Address: 141 A Desanur')">
-        <div class="card-top">
-          <div class="card-icon">🏠</div>
-          <div class="copy-pill">Copy Address</div>
-        </div>
-        <div class="card-title">House No: 141 A</div>
-        <div class="card-sub">Near Jamiya Masjeed, Ward 2, Desanur - 583121</div>
-      </div>
-
-      <!-- SBI Siruguppa -->
-      <div class="card" onclick="copyText('62378030320', 'SBI A/C: 62378030320')">
-        <div class="card-top">
-          <div class="card-icon">🔵</div>
-          <div class="copy-pill">Copy A/C</div>
-        </div>
-        <div class="card-title">SBI Siruguppa</div>
-        <div class="card-sub">A/C: 62378030320 • IFSC: SBIN0040119</div>
-      </div>
-
-      <!-- Kotak 811 -->
-      <div class="card" onclick="copyText('5449154932', 'Kotak A/C: 5449154932')">
-        <div class="card-top">
-          <div class="card-icon">🔴</div>
-          <div class="copy-pill">Copy A/C</div>
-        </div>
-        <div class="card-title">Kotak 811</div>
-        <div class="card-sub">A/C: 5449154932 • IFSC: KKBK0008296</div>
-      </div>
-
-      <!-- Abba Indian Bank -->
-      <div class="card" onclick="copyText('9945', 'Abba UPI PIN: 9945')">
-        <div class="card-top">
-          <div class="card-icon">🟢</div>
-          <div class="copy-pill">Copy PIN: 9945</div>
-        </div>
-        <div class="card-title">Abba Indian Bank</div>
-        <div class="card-sub">Mobile: 9945161755 • UPI PIN: 9945</div>
-      </div>
-
-      <!-- PhonePe UPI -->
-      <div class="card" onclick="copyText('8123912392@ybl', 'UPI: 8123912392@ybl')">
-        <div class="card-top">
-          <div class="card-icon">📱</div>
-          <div class="copy-pill">Copy UPI</div>
-        </div>
-        <div class="card-title">PhonePe / UPI</div>
-        <div class="card-sub">8123912392@ybl (SBI Linked)</div>
-      </div>
-
-      <!-- Laptop & Locker PIN -->
-      <div class="card" onclick="copyText('552552', 'Passcode: 552552')">
-        <div class="card-top">
-          <div class="card-icon">🔑</div>
-          <div class="copy-pill">Copy PIN</div>
-        </div>
-        <div class="card-title">Passcode: 552552</div>
-        <div class="card-sub">Laptop Lock / OneNote / Locker / Signal</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">Copied to clipboard!</div>
-
-  <script>
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 2200);
-    }
-
-    function copyText(val, label) {
-      navigator.clipboard.writeText(val).then(() => {
-        showToast('✅ ' + (label || 'Copied!'));
-      }).catch(() => {
-        showToast('Value: ' + val);
-      });
-    }
-
-    function askQuick(text) {
-      document.getElementById('queryInput').value = text;
-      sendQuery();
-    }
-
-    function closeResult() {
-      document.getElementById('resultCard').style.display = 'none';
-    }
-
-    function renderMarkdownToHtml(md) {
-      if (!md) return '';
-      let html = md
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        // Bold
-        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
-        .replace(/\\*(.*?)\\*/g, '<strong>$1</strong>')
-        // Code pills with click-to-copy
-        .replace(/\`([^\`]+)\`/g, '<code onclick="copyText(\\'$1\\', \\'Copied: $1\\')">$1</code>')
-        // Bullet points
-        .replace(/^[•\\-]\\s+(.*)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>')
-        // Numbered lists
-        .replace(/^(\\d+)\\.\\s+(.*)$/gm, '<div style="margin-bottom: 6px;"><strong>$1.</strong> $2</div>')
-        // Line breaks
-        .replace(/\\n/g, '<br>');
-      return html;
-    }
-
-    async function sendQuery() {
-      const q = document.getElementById('queryInput').value.trim();
-      if (!q) return;
-      const card = document.getElementById('resultCard');
-      const body = document.getElementById('resultBody');
-      card.style.display = 'block';
-      body.innerHTML = '<span style="color:#38bdf8;">🧠 Searching Notion databases & Knowledge Vault... ⏳</span>';
-      try {
-        const res = await fetch('/api/ask?q=' + encodeURIComponent(q));
-        const json = await res.json();
-        body.innerHTML = renderMarkdownToHtml(json.answer || 'Koi jawab nahi mila.');
-      } catch (e) {
-        body.innerHTML = '<span style="color:#ef4444;">Error connecting to assistant: ' + e.message + '</span>';
-      }
-    }
-
-    async function saveDirectNote() {
-      const note = document.getElementById('noteInput').value.trim();
-      if (!note) return;
-      showToast('Saving note to Notion... ⏳');
-      try {
-        const res = await fetch('/api/ask?q=' + encodeURIComponent('Note: ' + note));
-        const json = await res.json();
-        document.getElementById('noteInput').value = '';
-        showToast('✅ Note permanently saved in Notion!');
-        document.getElementById('resultCard').style.display = 'block';
-        document.getElementById('resultBody').innerHTML = renderMarkdownToHtml(json.answer);
-      } catch (e) {
-        showToast('Error saving note');
-      }
-    }
-
-    document.getElementById('queryInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') sendQuery();
-    });
-    document.getElementById('noteInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') saveDirectNote();
-    });
-  </script>
-</body>
-</html>`;
+  const dashPath = path.join(__dirname, 'dashboard.html');
+  if (fs.existsSync(dashPath)) {
+    return fs.readFileSync(dashPath, 'utf8');
+  }
+  return '<h1>Dashboard file missing</h1>';
 }
 
 // -------------------------------------------------------------
@@ -1552,6 +1431,63 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  // Real-time Dashboard API
+  if (pathname === '/api/dashboard') {
+    const payload = await getDashboardPayload();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(payload));
+  }
+
+  // Toggle Task Status (Pending <-> Done)
+  if (pathname === '/api/task/toggle') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    await new Promise(r => req.on('end', r));
+    let taskId = urlObj.searchParams.get('id');
+    let newStatus = urlObj.searchParams.get('status') || '✅ Done';
+    try {
+      const p = JSON.parse(body);
+      if (p.id) taskId = p.id;
+      if (p.status) newStatus = p.status;
+    } catch(e) {}
+    if (taskId) {
+      await notionReq('/v1/pages/' + taskId, 'PATCH', {
+        properties: { Status: { select: { name: newStatus } } }
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: true, id: taskId, status: newStatus }));
+    }
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: false, error: 'Missing taskId' }));
+  }
+
+  // Add Task API
+  if (pathname === '/api/task/add') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    await new Promise(r => req.on('end', r));
+    let title = '';
+    try {
+      const p = JSON.parse(body);
+      title = p.title || p.name;
+    } catch(e) {}
+    if (title) {
+      const created = await notionReq('/v1/pages', 'POST', {
+        parent: { database_id: DB_KAAM },
+        properties: {
+          Name: { title: [{ text: { content: title } }] },
+          Status: { select: { name: '⏳ Pending' } },
+          'Today Date': { date: { start: getTodayIST() } }
+        }
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: true, id: created?.id, title: title }));
+    }
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: false, error: 'Missing title' }));
+  }
+
+  // Smart Query API
   if (pathname === '/api/ask') {
     let q = urlObj.searchParams.get('q') || '';
     if (req.method === 'POST') {
@@ -1577,7 +1513,7 @@ const server = http.createServer(async (req, res) => {
     }));
   }
 
-  // Web UI
+  // Web UI Dashboard
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(getWebUIHtml());
 });
@@ -1590,11 +1526,14 @@ module.exports = {
 
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`🚀 [Cloud Worker] Online on port ${PORT}. 24/7 Autonomous Sync & Smart Assistant Active!`);
+    console.log('🚀 [Cloud Worker] Online on port ' + PORT + '. 24/7 Autonomous Sync & Dashboard Active!');
     
     // 20-second Quick Capture Sync loop
     setInterval(runQuickCaptureSync, 20000);
     runQuickCaptureSync();
+
+    // 60-second Automated Reminder Dispatcher
+    setInterval(checkAndSendReminders, 60000);
 
     // Telegram polling
     pollTelegram();
@@ -1602,9 +1541,9 @@ if (require.main === module) {
     // Keep-alive self-ping
     setInterval(() => {
       https.get('https://awais-notion-cloud-agent.onrender.com/health', (res) => {
-        console.log(`[Keep-Alive] Pinged self. Status: ${res.statusCode}`);
+        console.log('[Keep-Alive] Pinged self. Status: ' + res.statusCode);
       }).on('error', (err) => {
-        console.log(`[Keep-Alive] Ping error: ${err.message}`);
+        console.log('[Keep-Alive] Ping error: ' + err.message);
       });
     }, 10 * 60 * 1000);
   });
