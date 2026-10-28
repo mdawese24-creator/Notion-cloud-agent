@@ -78,6 +78,25 @@ function getYesterdayIST() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+// Format numbers in standard Indian Rupee notation (e.g. ₹1,14,593 or ₹70,341.61)
+function formatINR(val) {
+  if (val === null || val === undefined || isNaN(val)) return '₹0';
+  const num = Number(val);
+  const isNeg = num < 0;
+  const absNum = Math.abs(num);
+  const parts = absNum.toFixed(2).split('.');
+  let intPart = parts[0];
+  const decPart = parts[1];
+
+  let lastThree = intPart.substring(intPart.length - 3);
+  let otherNumbers = intPart.substring(0, intPart.length - 3);
+  if (otherNumbers !== '') {
+    lastThree = ',' + lastThree;
+  }
+  const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+  return `${isNeg ? '-' : ''}₹${formatted}${decPart === '00' ? '' : '.' + decPart}`;
+}
+
 // -------------------------------------------------------------
 // 1. Notion API Helper
 // -------------------------------------------------------------
@@ -442,7 +461,7 @@ async function runQuickCaptureSync() {
               syncedId = newExp?.id;
             }
             handledCategory = '💰 Daily Expenses';
-            summaryText = `Added to Daily Expenses: ₹${amount} (${cleanName}) on ${targetDate.split('T')[0]} via ${targetAccount.split('/')[0]}`;
+            summaryText = `Added to Daily Expenses: ${formatINR(amount)} (${cleanName}) on ${targetDate.split('T')[0]} via ${targetAccount.split('/')[0]}`;
           }
         }
       }
@@ -476,7 +495,49 @@ const KNOWLEDGE_VAULT = {
            `📋 *Family Voter IDs (EPIC Numbers):*\n` +
            `• *Mohammed Awese (Awais):* \`UBB2822708\` (Form 8 Ref: S10092O8C2909261200065)\n` +
            `• *Abba (Mehaboob Basha):* \`UBB1404151\` (Approved & Active)\n` +
-           `• *Mahammad Athif (Atif):* \`UBB3353083\` (Mobile 7619574514 linked)`,
+           `• *Ammi (Reshma Banu):* \`MZS1351410\` (Part 57, Serial 445)\n` +
+           `• *Mahammad Athif (Atif):* \`UBB3353083\` (Mobile 7619574514 linked)\n\n` +
+           `💡 *Tip:* Dukan ka address janne ke liye poochhein: "Dukan ka address"`,
+
+  dukanAddress: `🪑 *Dukan (Shop) Official Address — Tuba Furniture:*\n\n` +
+                `• *Shop Name:* \`Tuba Furniture\` (Siruguppa)\n` +
+                `• *Address:* Boy's Hostel, Near Tipu Sultan Circle, Sindhanur Main Road, Siruguppa, Ballari District, Karnataka - 583121\n` +
+                `• *Google Maps:* https://maps.app.goo.gl/iPJiaHeayK4iThj98\n` +
+                `• *Shop Wi-Fi:* \`8618504406\` (Password: \`9916022600\`)\n` +
+                `• *CCTV App:* \`gCMOB\` (Password: \`admin@1234\`)\n` +
+                `• *Contact Numbers:* \`9945161755\` / \`9591395554\``,
+
+  ammiKYC: `🧕 *Ammi (Reshma Banu) Official Golden KYC & Identity:*\n\n` +
+           `• *Full Name:* Reshma Banu\n` +
+           `• *Voter ID (EPIC):* \`MZS1351410\`\n` +
+           `• *Aadhaar No:* \`9461 9458 9503\`\n` +
+           `• *PAN Card:* \`GOWPR0751B\` (100% Active & Linked ✅)\n` +
+           `• *Mobile Number:* \`6363498692\`\n` +
+           `• *Date of Birth:* \`01/01/1975\`\n` +
+           `• *Voter Serial / Part:* Part 57, Serial 445\n` +
+           `• *Address:* House No 141 A, Near Jamiya Masjeed, Desanur - 583121\n\n` +
+           `📋 *Ready to Copy EPIC:* \`MZS1351410\``,
+
+  familyKYC: `📋 *Family Golden KYC & Voter Records:*\n\n` +
+             `1️⃣ *Mohammed Awese (Awais):*\n` +
+             `• Voter ID (EPIC): \`UBB2822708\` (Form 8 Ref: S10092O8C2909261200065)\n` +
+             `• Aadhaar No: \`7694 5296 4584\`\n` +
+             `• PAN Card: \`DHWPM9916F\`\n` +
+             `• Mobile: \`8123912392\`\n\n` +
+             `2️⃣ *Abba (Mehaboob Basha):*\n` +
+             `• Voter ID (EPIC): \`UBB1404151\`\n` +
+             `• Aadhaar (Last 4): \`5595\`\n` +
+             `• Mobile: \`9945161755\` | UPI PIN: \`9945\`\n\n` +
+             `3️⃣ *Ammi (Reshma Banu):*\n` +
+             `• Voter ID (EPIC): \`MZS1351410\`\n` +
+             `• Aadhaar No: \`9461 9458 9503\`\n` +
+             `• PAN Card: \`GOWPR0751B\`\n` +
+             `• Mobile: \`6363498692\` | DOB: \`01/01/1975\`\n\n` +
+             `4️⃣ *Mahammad Athif (Atif):*\n` +
+             `• Voter ID (EPIC): \`UBB3353083\`\n` +
+             `• Aadhaar: \`6687 0862 2572\`\n` +
+             `• PAN Card: \`DYMPA6781D\`\n` +
+             `• Mobile: \`7619574514\``,
 
   sbi: `🏦 *State Bank of India (SBI Siruguppa)*\n\n` +
        `• *Account Holder:* S A Mohammed Awese\n` +
@@ -624,13 +685,39 @@ async function handleSmartAssistant(rawText) {
   }
 
   // =========================================================
-  // 3. ADDRESS / HOUSE NO / VILLAGE / VOTER EPIC / IDENTITY
-  // (CRITICAL: Must NEVER fall into expense search!)
+  // 3. DUKAN (SHOP) / TUBA FURNITURE ADDRESS
   // =========================================================
-  if (hasKeyword(normalized, ['house', 'ghar', 'makan', 'room no', 'pata', 'address', 'pincode', 'pin code', 'ward', 'desanur', 'jamiya', 'masjeed', 'voter', 'epic', 'form 8', 'pan card', 'pan no', 'aadhaar', 'adhar'])) {
-    if (hasKeyword(normalized, ['house', 'ghar', 'makan', 'address', 'pata', 'ward', 'pincode', 'desanur'])) {
-      return KNOWLEDGE_VAULT.address;
+  if (hasKeyword(normalized, ['dukan', 'shop', 'tuba', 'furniture', 'store'])) {
+    return KNOWLEDGE_VAULT.dukanAddress;
+  }
+
+  // =========================================================
+  // 3.1 AMMI (RESHMA BANU) KYC & VOTER ID (EPIC)
+  // =========================================================
+  if (hasKeyword(normalized, ['reshma', 'ammi', 'mummy', 'valida', 'ammi voter', 'epic reshma', 'reshma epic', 'reshma voter'])) {
+    return KNOWLEDGE_VAULT.ammiKYC;
+  }
+
+  // =========================================================
+  // 3.2 FAMILY KYC / VOTER EPIC / AADHAAR / PAN
+  // =========================================================
+  if (hasKeyword(normalized, ['voter', 'epic', 'form 8', 'aadhaar', 'adhar', 'pan card', 'pan no'])) {
+    if (hasKeyword(normalized, ['abba', 'baba', 'mehaboob'])) {
+      return `🪪 *Abba (Mehaboob Basha) KYC Details:*\n\n• *Voter ID (EPIC):* \`UBB1404151\`\n• *Aadhaar (Last 4):* \`5595\`\n• *Mobile:* \`9945161755\`\n• *UPI PIN:* \`9945\``;
     }
+    if (hasKeyword(normalized, ['atif', 'athif'])) {
+      return `🪪 *Mahammad Athif (Atif) KYC Details:*\n\n• *Voter ID (EPIC):* \`UBB3353083\`\n• *Aadhaar:* \`6687 0862 2572\`\n• *PAN Card:* \`DYMPA6781D\`\n• *Mobile:* \`7619574514\``;
+    }
+    if (hasKeyword(normalized, ['awais', 'awese', 'mera voter', 'my voter', 'mera pan', 'mera aadhaar'])) {
+      return `🪪 *Mohammed Awese (Awais) Golden KYC:*\n\n• *Voter ID (EPIC):* \`UBB2822708\` (Form 8 Ref: S10092O8C2909261200065)\n• *Aadhaar No:* \`7694 5296 4584\`\n• *PAN Card:* \`DHWPM9916F\`\n• *Mobile:* \`8123912392\``;
+    }
+    return KNOWLEDGE_VAULT.familyKYC;
+  }
+
+  // =========================================================
+  // 3.3 GHAR / HOUSE NO / RESIDENCE ADDRESS
+  // =========================================================
+  if (hasKeyword(normalized, ['house', 'ghar', 'makan', 'room no', 'pata', 'address', 'pincode', 'pin code', 'ward', 'desanur', 'jamiya', 'masjeed'])) {
     return KNOWLEDGE_VAULT.address;
   }
 
@@ -727,13 +814,128 @@ async function handleSmartAssistant(rawText) {
   }
 
   // =========================================================
-  // 9. EXPENSE & KHARCHA ENGINE (SMART DATE & MONTH PARSER)
+  // 9. EXPENSE, INCOME & FINANCIAL ENGINE (SMART DATE & PERIOD PARSER)
   // =========================================================
-  if (hasKeyword(normalized, ['kharch', 'kharcha', 'kharche', 'expense', 'expenses', 'spent', 'food bill', 'total kharcha', 'hisab'])) {
-    // 9.1 Check if specific month & year requested (e.g. "Nov 2026", "November", "October", etc.)
+  if (hasKeyword(normalized, ['kharch', 'kharcha', 'kharche', 'expense', 'expenses', 'spent', 'food bill', 'total kharcha', 'hisab', 'income', 'salary', 'kamai', 'bachat', 'saving', 'savings'])) {
+
+    // Helper to query expenses by date range and categorize Income vs Expense
+    async function fetchFinancialSummary(startDate, endDate) {
+      const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
+        filter: {
+          and: [
+            { property: 'Date', date: { on_or_after: startDate } },
+            { property: 'Date', date: { on_or_before: endDate } }
+          ]
+        },
+        sorts: [{ property: 'Date', direction: 'descending' }],
+        page_size: 100
+      });
+      const records = expRes.results || [];
+      let totalIncome = 0;
+      let totalExpense = 0;
+      const expenseCats = {};
+      const incomeCats = {};
+      const recentItems = [];
+
+      for (const r of records) {
+        const amt = r.properties?.['Amount (₹)']?.number || 0;
+        const name = r.properties?.Name?.title?.[0]?.plain_text || 'Transaction';
+        const cat = r.properties?.Category?.select?.name || 'Other';
+        const d = (r.properties?.Date?.date?.start || '').split('T')[0];
+        const type = r.properties?.Type?.select?.name || (cat.toLowerCase().includes('salary') ? 'Income' : 'Expense');
+
+        if (type === 'Income' || cat.toLowerCase().includes('salary')) {
+          totalIncome += amt;
+          incomeCats[cat] = (incomeCats[cat] || 0) + amt;
+        } else {
+          totalExpense += amt;
+          expenseCats[cat] = (expenseCats[cat] || 0) + amt;
+          recentItems.push(`• *${formatINR(amt)}* — ${name} (${cat}, ${d})`);
+        }
+      }
+
+      return {
+        records,
+        totalIncome,
+        totalExpense,
+        netSavings: totalIncome - totalExpense,
+        expenseCats,
+        incomeCats,
+        recentItems
+      };
+    }
+
+    // 9.1 Last 3 Months Aggregation & Comparison
+    if (hasKeyword(normalized, ['last 3', 'pichle 3', 'pichle teen', '3 mahine', '3 mahina', '3 months', 'teen mahine', '3 month'])) {
+      const aug = await fetchFinancialSummary('2026-08-01', '2026-08-31');
+      const sep = await fetchFinancialSummary('2026-09-01', '2026-09-30');
+      const oct = await fetchFinancialSummary('2026-10-01', '2026-10-31');
+
+      const grandIncome = aug.totalIncome + sep.totalIncome + oct.totalIncome;
+      const grandExpense = aug.totalExpense + sep.totalExpense + oct.totalExpense;
+      const grandSavings = grandIncome - grandExpense;
+
+      return `📊 *Pichle 3 Mahino Ka Financial Breakdown (Aug – Oct 2026):*\n\n` +
+             `1️⃣ *August 2026:*\n` +
+             `   • 🟢 Total Income: *${formatINR(aug.totalIncome)}*\n` +
+             `   • 🔴 Total Kharcha: *${formatINR(aug.totalExpense)}*\n` +
+             `   • 💰 Net Savings: *${formatINR(aug.netSavings)}*\n\n` +
+             `2️⃣ *September 2026:*\n` +
+             `   • 🟢 Total Income: *${formatINR(sep.totalIncome)}*\n` +
+             `   • 🔴 Total Kharcha: *${formatINR(sep.totalExpense)}*\n` +
+             `   • 💰 Net Savings: *${formatINR(sep.netSavings)}*\n\n` +
+             `3️⃣ *October 2026 (Current Month):*\n` +
+             `   • 🟢 Total Income: *${formatINR(oct.totalIncome)}*\n` +
+             `   • 🔴 Total Kharcha: *${formatINR(oct.totalExpense)}*\n` +
+             `   • 💰 Net Savings: *${formatINR(oct.netSavings)}*\n\n` +
+             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+             `🏆 *3-Mahine Ka Grand Total Summary:*\n` +
+             `• 🟢 *Total Income (Kamai):* *${formatINR(grandIncome)}*\n` +
+             `• 🔴 *Total Kharcha:* *${formatINR(grandExpense)}*\n` +
+             `• 💎 *Net Total Bachat (Savings):* *${formatINR(grandSavings)}*`;
+    }
+
+    // 9.2 Current Month ("Iss month", "this month", "is mahine", "current month", "october")
+    if (hasKeyword(normalized, ['iss month', 'this month', 'is mahine', 'current month', 'is month', 'october', 'oct'])) {
+      const data = await fetchFinancialSummary('2026-10-01', '2026-10-31');
+
+      const expBreakdown = Object.entries(data.expenseCats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, sum]) => `  • ${cat}: *${formatINR(sum)}*`)
+        .join('\n');
+
+      const incBreakdown = Object.entries(data.incomeCats)
+        .map(([cat, sum]) => `  • ${cat}: *${formatINR(sum)}*`)
+        .join('\n') || '  • Koi alag source nahi';
+
+      return `📊 *October 2026 (Current Month) Financial Hisab:*\n\n` +
+             `🟢 *Total Income (Kamai / Salary):* *${formatINR(data.totalIncome)}*\n` +
+             `🔴 *Total Kharcha (Actual Expenses):* *${formatINR(data.totalExpense)}*\n` +
+             `💰 *Net Bachat / Savings:* *${formatINR(data.netSavings)}* (${data.records.length} transactions)\n\n` +
+             `📂 *Kharcha Category Breakdown:*\n${expBreakdown}\n\n` +
+             `💼 *Income Sources:*\n${incBreakdown}\n\n` +
+             `📋 *Recent Transactions:*\n${data.recentItems.slice(0, 8).join('\n')}`;
+    }
+
+    // 9.3 Previous Month ("Last month", "pichle mahine", "september")
+    if (hasKeyword(normalized, ['last month', 'pichle mahine', 'pichla mahina', 'previous month', 'september', 'sep'])) {
+      const data = await fetchFinancialSummary('2026-09-01', '2026-09-30');
+
+      const expBreakdown = Object.entries(data.expenseCats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, sum]) => `  • ${cat}: *${formatINR(sum)}*`)
+        .join('\n');
+
+      return `📊 *September 2026 Financial Hisab:*\n\n` +
+             `🟢 *Total Income:* *${formatINR(data.totalIncome)}*\n` +
+             `🔴 *Total Kharcha:* *${formatINR(data.totalExpense)}*\n` +
+             `💰 *Net Bachat / Savings:* *${formatINR(data.netSavings)}*\n\n` +
+             `📂 *Kharcha Categories:*\n${expBreakdown}`;
+    }
+
+    // 9.4 Specific named month parser (e.g. "August", "November 2026")
     const monthRegex = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i;
     const mMatch = lower.match(monthRegex);
-
     if (mMatch) {
       const monthPrefix = mMatch[1].slice(0, 3).toLowerCase();
       const monthNum = MONTH_MAP[monthPrefix] || '10';
@@ -745,51 +947,44 @@ async function handleSmartAssistant(rawText) {
       const startDate = `${targetYear}-${monthNum}-01`;
       const endDate = `${targetYear}-${monthNum}-${String(daysInMonth).padStart(2, '0')}`;
 
-      const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
-        filter: {
-          and: [
-            { property: 'Date', date: { on_or_after: startDate } },
-            { property: 'Date', date: { on_or_before: endDate } }
-          ]
-        },
-        sorts: [{ property: 'Date', direction: 'descending' }],
-        page_size: 50
-      });
-
-      const records = expRes.results || [];
-      if (records.length === 0) {
-        // Helpful smart response if no records
-        return `📊 *${monthName} ${targetYear} Month Expenses:*\n\n` +
-               `Is mahine me abhi tak koi kharcha record nahi hua hai.\n` +
+      const data = await fetchFinancialSummary(startDate, endDate);
+      if (data.records.length === 0) {
+        return `📊 *${monthName} ${targetYear} Financial Hisab:*\n\n` +
+               `Is mahine me abhi tak koi records nahi hain.\n` +
                (monthNum === '11' && targetYear === '2026' ? `*(November start hone me abhi kuch din baaki hain!)*\n\n` : `\n`) +
-               `💡 *Tip:* Agar aap October 2026 ka kharcha dekhna chahte hain to "October expenses" ya "Aaj ka kharcha" poochhein!`;
+               `💡 *Tip:* Agar aap October 2026 ka hisab dekhna chahte hain to "October expenses" ya "Iss month ka kharcha" poochhein!`;
       }
 
-      let total = 0;
-      const catTotals = {};
-      const items = records.map(r => {
-        const amt = r.properties?.['Amount (₹)']?.number || 0;
-        const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
-        const cat = r.properties?.Category?.select?.name || 'Other';
-        const d = (r.properties?.Date?.date?.start || '').split('T')[0];
-        total += amt;
-        catTotals[cat] = (catTotals[cat] || 0) + amt;
-        return `• *₹${amt}* — ${name} (${cat}, ${d})`;
-      });
-
-      const catBreakdown = Object.entries(catTotals)
+      const expBreakdown = Object.entries(data.expenseCats)
         .sort((a, b) => b[1] - a[1])
-        .map(([cat, sum]) => `  • ${cat}: *₹${sum.toFixed(2)}*`)
+        .map(([cat, sum]) => `  • ${cat}: *${formatINR(sum)}*`)
         .join('\n');
 
-      return `📊 *${monthName} ${targetYear} Month Expenses Summary:*\n\n` +
-             `💰 *Total Kharcha:* *₹${total.toFixed(2)}* (${records.length} transactions)\n\n` +
-             `📂 *Category Breakdown:*\n${catBreakdown}\n\n` +
-             `📋 *Recent Transactions:*\n${items.slice(0, 10).join('\n')}` +
-             (records.length > 10 ? `\n\n*(aur ${records.length - 10} transactions Notion me saved hain)*` : '');
+      return `📊 *${monthName} ${targetYear} Financial Hisab:*\n\n` +
+             `🟢 *Total Income:* *${formatINR(data.totalIncome)}*\n` +
+             `🔴 *Total Kharcha:* *${formatINR(data.totalExpense)}*\n` +
+             `💰 *Net Bachat / Savings:* *${formatINR(data.netSavings)}*\n\n` +
+             `📂 *Kharcha Breakdown:*\n${expBreakdown}`;
     }
 
-    // 9.2 Check Yesterday
+    // 9.5 General Income vs Expense Question ("income kitna hai aur expenses kitna hai", "bachat kitni hai")
+    if (hasKeyword(normalized, ['income kitna', 'income kitni', 'expenses kitna', 'expense kitna', 'income aur', 'kamai'])) {
+      const data = await fetchFinancialSummary('2026-10-01', '2026-10-31');
+
+      const expBreakdown = Object.entries(data.expenseCats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, sum]) => `  • ${cat}: *${formatINR(sum)}*`)
+        .join('\n');
+
+      return `💰 *Income vs Expenses Hisab (October 2026 - Current Month):*\n\n` +
+             `🟢 *Total Income (Kamai / Salary):* *${formatINR(data.totalIncome)}*\n` +
+             `🔴 *Total Kharcha (Actual Expenses):* *${formatINR(data.totalExpense)}*\n` +
+             `💎 *Net Bachat (Savings):* *${formatINR(data.netSavings)}*\n\n` +
+             `📂 *Kharcha Category Breakdown:*\n${expBreakdown}\n\n` +
+             `📈 *Pichle 3 Mahine Ka Summary Dekhne Ke Liye Poochhein:* "Last 3 mahine ka kharcha"`;
+    }
+
+    // 9.6 Check Yesterday ("Kal ka kharcha")
     if (hasKeyword(normalized, ['kal', 'yesterday', 'beeta hua kal'])) {
       const yesterday = getYesterdayIST();
       const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
@@ -807,12 +1002,12 @@ async function handleSmartAssistant(rawText) {
         const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
         const cat = r.properties?.Category?.select?.name || '';
         total += amt;
-        return `• *₹${amt}* — ${name} (${cat})`;
+        return `• *${formatINR(amt)}* — ${name} (${cat})`;
       });
-      return `📊 *Kal ka Kharcha (${yesterday}):*\n\n${items.join('\n') || 'Kal koi kharcha record nahi hua tha.'}\n\n💰 *Total:* ₹${total.toFixed(2)}`;
+      return `📊 *Kal ka Kharcha (${yesterday}):*\n\n${items.join('\n') || 'Kal koi kharcha record nahi hua tha.'}\n\n💰 *Total Kharcha:* *${formatINR(total)}*`;
     }
 
-    // 9.3 Default: Today's expenses
+    // 9.7 Default / Today's Expenses ("Aaj ka kharcha")
     const today = getTodayIST();
     const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
       filter: { property: 'Date', date: { on_or_after: today } },
@@ -824,9 +1019,9 @@ async function handleSmartAssistant(rawText) {
       const name = r.properties?.Name?.title?.[0]?.plain_text || 'Expense';
       const cat = r.properties?.Category?.select?.name || '';
       total += amt;
-      return `• *₹${amt}* — ${name} (${cat})`;
+      return `• *${formatINR(amt)}* — ${name} (${cat})`;
     });
-    return `📊 *Aaj ka Kharcha (${today}):*\n\n${items.join('\n') || 'Aaj abhi tak koi kharcha add nahi hua hai.'}\n\n💰 *Total Kharcha:* ₹${total.toFixed(2)}`;
+    return `📊 *Aaj ka Kharcha (${today}):*\n\n${items.join('\n') || 'Aaj abhi tak koi kharcha add nahi hua hai.'}\n\n💰 *Total Kharcha:* *${formatINR(total)}*\n\n💡 *Tip:* Pure mahine ka hisab janne ke liye poochhein: "Iss month ka kharcha"`;
   }
 
   // =========================================================
@@ -840,7 +1035,7 @@ async function handleSmartAssistant(rawText) {
       const op = r.properties?.Operator?.select?.name || '';
       const status = r.properties?.['Recharge Status']?.formula?.string || 'Active';
       const cost = r.properties?.['Plan Cost (₹)']?.number;
-      return `• *${name}* (${op} ${no}): *${status}* ${cost ? '₹' + cost : ''}`;
+      return `• *${name}* (${op} ${no}): *${status}* ${cost ? formatINR(cost) : ''}`;
     });
     return `📱 *Family SIM & Recharge Status:*\n\n${list.join('\n\n') || 'SIM records check karein.'}`;
   }
@@ -881,7 +1076,7 @@ async function handleSmartAssistant(rawText) {
       const gave = r.properties['Total Gave (Sum)']?.rollup?.number || 0;
       const got = r.properties['Total Got (Sum)']?.rollup?.number || 0;
       const bal = r.properties['Net Balance']?.formula?.string || '✅ Settled';
-      return `• *${name}* — You Gave: ₹${gave} | You Got: ₹${got} (${bal})`;
+      return `• *${name}* — You Gave: ${formatINR(gave)} | You Got: ${formatINR(got)} (${bal})`;
     });
     return `💸 *Khatabook Customer Balances:*\n\n${list.join('\n') || 'Khatabook ledger clear hai!'}`;
   }
@@ -1125,9 +1320,13 @@ function getWebUIHtml() {
 
     <!-- Quick Chips -->
     <div class="quick-chips">
+      <div class="chip" onclick="askQuick('Epic reshma')">🧕 Epic Reshma (Ammi)</div>
+      <div class="chip" onclick="askQuick('Dukan ka address')">🪑 Dukan (Tuba Furniture)</div>
+      <div class="chip" onclick="askQuick('Iss month ka kharcha')">📊 Is Mahine Ka Kharcha</div>
+      <div class="chip" onclick="askQuick('Last 3 mahine ka kharcha')">📈 Last 3 Mahine Ka Hisab</div>
+      <div class="chip" onclick="askQuick('income kitna hai aur expenses kitna hai')">💰 Income & Expense Hisab</div>
       <div class="chip" onclick="askQuick('house no kya hai')">🏠 House No (141 A)</div>
-      <div class="chip" onclick="askQuick('aaj ka kharcha kitna hua')">💰 Aaj ka Kharcha</div>
-      <div class="chip" onclick="askQuick('October 2026 expenses')">📊 Is Mahine Ka Kharcha</div>
+      <div class="chip" onclick="askQuick('aaj ka kharcha kitna hua')">💸 Aaj ka Kharcha</div>
       <div class="chip" onclick="askQuick('pending kaam dikhao')">📋 Pending Kaam</div>
       <div class="chip" onclick="askQuick('kal ka kaam kya hai')">⏰ Kal Ke Reminders</div>
       <div class="chip" onclick="askQuick('gaon plan')">🏡 Gaon Plan (31-Oct)</div>
@@ -1138,7 +1337,7 @@ function getWebUIHtml() {
       <div class="chip" onclick="askQuick('abba ka indian bank details')">🏦 Abba Indian Bank</div>
       <div class="chip" onclick="askQuick('recent notes dikhao')">📝 Recent Notes</div>
       <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi & PINs</div>
-      <div class="chip" onclick="askQuick('khatabook udhar hisab')">💸 Khatabook Ledger</div>
+      <div class="chip" onclick="askQuick('khatabook udhar hisab')">🤝 Khatabook Ledger</div>
     </div>
 
     <!-- AI Response Card -->
@@ -1164,6 +1363,26 @@ function getWebUIHtml() {
       <span>⚡ Instant Copy Vault (1-Tap Copy for Mobile & Laptop)</span>
     </div>
     <div class="cards-grid">
+      <!-- Ammi Voter ID (EPIC) -->
+      <div class="card" onclick="copyText('MZS1351410', 'Ammi Voter ID: MZS1351410')">
+        <div class="card-top">
+          <div class="card-icon">🧕</div>
+          <div class="copy-pill">Copy EPIC</div>
+        </div>
+        <div class="card-title">Ammi Voter ID (EPIC)</div>
+        <div class="card-sub">Reshma Banu • MZS1351410 (Part 57, Serial 445)</div>
+      </div>
+
+      <!-- Tuba Furniture (Dukan) -->
+      <div class="card" onclick="copyText('Tuba Furniture, Boy\'s Hostel, Near Tipu Sultan Circle, Sindhanur Main Road, Siruguppa, Karnataka - 583121', 'Address: Tuba Furniture')">
+        <div class="card-top">
+          <div class="card-icon">🪑</div>
+          <div class="copy-pill">Copy Dukan Address</div>
+        </div>
+        <div class="card-title">Tuba Furniture (Dukan)</div>
+        <div class="card-sub">Near Tipu Sultan Circle, Siruguppa - 583121</div>
+      </div>
+
       <!-- House Address -->
       <div class="card" onclick="copyText('141 A, Near Jamiya Masjeed, Ward No 2, Desanur, Siruguppa, Ballari - 583121', 'Address: 141 A Desanur')">
         <div class="card-top">
@@ -1363,22 +1582,30 @@ const server = http.createServer(async (req, res) => {
   res.end(getWebUIHtml());
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 [Cloud Worker] Online on port ${PORT}. 24/7 Autonomous Sync & Smart Assistant Active!`);
-  
-  // 20-second Quick Capture Sync loop
-  setInterval(runQuickCaptureSync, 20000);
-  runQuickCaptureSync();
+module.exports = {
+  handleSmartAssistant,
+  formatINR,
+  KNOWLEDGE_VAULT
+};
 
-  // Telegram polling
-  pollTelegram();
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`🚀 [Cloud Worker] Online on port ${PORT}. 24/7 Autonomous Sync & Smart Assistant Active!`);
+    
+    // 20-second Quick Capture Sync loop
+    setInterval(runQuickCaptureSync, 20000);
+    runQuickCaptureSync();
 
-  // Keep-alive self-ping
-  setInterval(() => {
-    https.get('https://awais-notion-cloud-agent.onrender.com/health', (res) => {
-      console.log(`[Keep-Alive] Pinged self. Status: ${res.statusCode}`);
-    }).on('error', (err) => {
-      console.log(`[Keep-Alive] Ping error: ${err.message}`);
-    });
-  }, 10 * 60 * 1000);
-});
+    // Telegram polling
+    pollTelegram();
+
+    // Keep-alive self-ping
+    setInterval(() => {
+      https.get('https://awais-notion-cloud-agent.onrender.com/health', (res) => {
+        console.log(`[Keep-Alive] Pinged self. Status: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.log(`[Keep-Alive] Ping error: ${err.message}`);
+      });
+    }, 10 * 60 * 1000);
+  });
+}
