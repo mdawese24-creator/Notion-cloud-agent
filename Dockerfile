@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY package.json ./
 COPY server.js ./
+COPY dashboard.html ./
 
 EXPOSE 3000
 
