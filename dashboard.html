@@ -159,12 +159,12 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-      <button class="tab-btn" onclick="switchTab('kaam')">📋 Kaam Tracker (<span id="tabPendingCount">20</span>)</button>
-      <button class="tab-btn" onclick="switchTab('kharcha')">💰 Kharcha & Kamai</button>
-      <button class="tab-btn" onclick="switchTab('gaon')">🏡 Gaon Trip</button>
-      <button class="tab-btn" onclick="switchTab('kyc')">🪪 Family KYC</button>
-      <button class="tab-btn" onclick="switchTab('assistant')">🤖 AI Assistant</button>
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+      <button class="tab-btn" data-tab="kaam" onclick="switchTab('kaam')">📋 Kaam Tracker (<span id="tabPendingCount">20</span>)</button>
+      <button class="tab-btn" data-tab="kharcha" onclick="switchTab('kharcha')">💰 Kharcha & Kamai</button>
+      <button class="tab-btn" data-tab="gaon" onclick="switchTab('gaon')">🏡 Gaon Trip</button>
+      <button class="tab-btn" data-tab="kyc" onclick="switchTab('kyc')">🪪 Family KYC</button>
+      <button class="tab-btn" data-tab="assistant" onclick="switchTab('assistant')">🤖 AI Assistant</button>
     </div>
 
     <!-- Phone Push Alert Banner -->
@@ -429,12 +429,14 @@
     }
 
     function switchTab(name) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        if (b.getAttribute('data-tab') === name) b.classList.add('active');
+        else b.classList.remove('active');
+      });
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(name));
-      if (activeBtn) activeBtn.classList.add('active');
-      const v = document.getElementById('view-' + name);
-      if (v) v.classList.add('active');
+      const target = document.getElementById('view-' + name);
+      if (target) target.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateClock() {
@@ -500,6 +502,11 @@
       } catch(e) { showToast('Error adding task'); }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     async function loadDashboard() {
       try {
         const res = await fetch('/api/dashboard');
@@ -530,56 +537,62 @@
 
         // Urgent Reminders
         const reminders = data.tasks.filter(t => t.reminder && t.reminder.includes('T')).slice(0, 4);
-        document.getElementById('urgentRemindersList').innerHTML = reminders.map(t => `
+        document.getElementById('urgentRemindersList').innerHTML = reminders.map(t => {
+          const escTitle = escapeHtml(t.title);
+          return `
           <div class="task-card">
             <div class="task-left">
-              <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+              <div class="task-checkbox" data-id="${t.id}" onclick="toggleTask(this.getAttribute('data-id'), this)"></div>
               <div>
-                <div class="task-title">${t.title}</div>
+                <div class="task-title">${escTitle}</div>
                 <div class="task-meta">
                   <span class="pill-reminder">⏰ ${t.reminder.split('T')[1].substring(0, 5)}</span>
                   <span>📅 ${t.reminder.split('T')[0]}</span>
                 </div>
               </div>
             </div>
-            <a href="javascript:void(0)" onclick="addToCalendar('${t.title.replace(/'/g, "\\'")}', '${t.reminder}')" class="cal-btn">📅 Alarm</a>
+            <a href="javascript:void(0)" data-title="${encodeURIComponent(t.title)}" data-time="${t.reminder}" onclick="addToCalendar(decodeURIComponent(this.getAttribute('data-title')), this.getAttribute('data-time'))" class="cal-btn">📅 Alarm</a>
           </div>
-        `).join('') || '<div style="font-size:12px; color:#94a3b8; padding:8px;">No urgent reminders for today.</div>';
+        `}).join('') || '<div style="font-size:12px; color:#94a3b8; padding:8px;">No urgent reminders for today.</div>';
 
         // Full Tasks List
         const fullList = document.getElementById('fullTasksList');
         if (fullList) {
-          fullList.innerHTML = data.tasks.map(t => `
+          fullList.innerHTML = data.tasks.map(t => {
+            const escTitle = escapeHtml(t.title);
+            return `
             <div class="task-card">
               <div class="task-left">
-                <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+                <div class="task-checkbox" data-id="${t.id}" onclick="toggleTask(this.getAttribute('data-id'), this)"></div>
                 <div>
-                  <div class="task-title">${t.title}</div>
+                  <div class="task-title">${escTitle}</div>
                   <div class="task-meta">
                     ${t.reminder ? `<span class="pill-reminder">⏰ ${t.reminder.replace('T', ' ').substring(0, 16)}</span>` : ''}
                     <span>📅 ${t.date || 'Active'}</span>
                   </div>
                 </div>
               </div>
-              ${t.reminder ? `<a href="javascript:void(0)" onclick="addToCalendar('${t.title.replace(/'/g, "\\'")}', '${t.reminder}')" class="cal-btn">📅 Alarm</a>` : ''}
+              ${t.reminder ? `<a href="javascript:void(0)" data-title="${encodeURIComponent(t.title)}" data-time="${t.reminder}" onclick="addToCalendar(decodeURIComponent(this.getAttribute('data-title')), this.getAttribute('data-time'))" class="cal-btn">📅 Alarm</a>` : ''}
             </div>
-          `).join('');
+          `}).join('');
         }
 
         // Gaon Tasks List
         const gaonEl = document.getElementById('gaonTasksList');
         if (gaonEl) {
-          gaonEl.innerHTML = data.gaonTasks.map(t => `
+          gaonEl.innerHTML = data.gaonTasks.map(t => {
+            const escTitle = escapeHtml(t.title);
+            return `
             <div class="task-card" style="background:rgba(15,23,42,0.6);">
               <div class="task-left">
-                <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+                <div class="task-checkbox" data-id="${t.id}" onclick="toggleTask(this.getAttribute('data-id'), this)"></div>
                 <div>
-                  <div class="task-title">${t.title}</div>
+                  <div class="task-title">${escTitle}</div>
                   <div class="task-meta"><span>📅 31-Oct Trip Task</span></div>
                 </div>
               </div>
             </div>
-          `).join('');
+          `}).join('');
         }
 
         // Recent Expenses
@@ -589,7 +602,7 @@
             <div class="task-card">
               <div class="task-left">
                 <div>
-                  <div class="task-title">${e.name}</div>
+                  <div class="task-title">${escapeHtml(e.name)}</div>
                   <div class="task-meta"><span>📂 ${e.cat}</span> • <span>📅 ${e.date}</span></div>
                 </div>
               </div>
@@ -610,19 +623,19 @@
                 </div>
               </div>
               <div class="kyc-row">
-                <div class="kyc-item" onclick="copyText('${k.voter}', '${k.name} EPIC')">
+                <div class="kyc-item" data-copy="${k.voter}" data-label="${k.name} EPIC" onclick="copyText(this.getAttribute('data-copy'), this.getAttribute('data-label'))">
                   <div class="kyc-label">Voter ID (EPIC)</div>
                   <div class="kyc-val">${k.voter}</div>
                 </div>
-                <div class="kyc-item" onclick="copyText('${k.aadhaar.replace(/[^0-9]/g, '')}', '${k.name} Aadhaar')">
+                <div class="kyc-item" data-copy="${k.aadhaar.replace(/[^0-9]/g, '')}" data-label="${k.name} Aadhaar" onclick="copyText(this.getAttribute('data-copy'), this.getAttribute('data-label'))">
                   <div class="kyc-label">Aadhaar Card</div>
                   <div class="kyc-val">${k.aadhaar}</div>
                 </div>
-                <div class="kyc-item" onclick="copyText('${k.pan}', '${k.name} PAN')">
+                <div class="kyc-item" data-copy="${k.pan}" data-label="${k.name} PAN" onclick="copyText(this.getAttribute('data-copy'), this.getAttribute('data-label'))">
                   <div class="kyc-label">PAN Card</div>
                   <div class="kyc-val">${k.pan}</div>
                 </div>
-                <div class="kyc-item" onclick="copyText('${k.mobile}', '${k.name} Mobile')">
+                <div class="kyc-item" data-copy="${k.mobile}" data-label="${k.name} Mobile" onclick="copyText(this.getAttribute('data-copy'), this.getAttribute('data-label'))">
                   <div class="kyc-label">Mobile Number</div>
                   <div class="kyc-val">${k.mobile}</div>
                 </div>
@@ -652,7 +665,7 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-        .replace(/\`([^\`]+)\`/g, '<code onclick="copyText(\\'$1\\', \\'Copied: $1\\')" style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; cursor:pointer;">$1</code>')
+        .replace(/`([^`]+)`/g, '<code style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px;">$1</code>')
         .replace(/^[•\-]\s+(.*)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>')
         .replace(/^(\d+)\.\s+(.*)$/gm, '<div style="margin-bottom: 6px;"><strong>$1.</strong> $2</div>')
         .replace(/\n/g, '<br>');
