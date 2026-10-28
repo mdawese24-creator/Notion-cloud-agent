@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Awais Pocket Brain ⚡ | Executive Notion Dashboard</title>
+  <meta name="theme-color" content="#080c14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c14;
+      --card-bg: #0f172a;
+      --card-border: #1e293b;
+      --card-hover: #172554;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #10b981;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 12px; padding-bottom: 90px; }
+    
+    .container { max-width: 900px; margin: 0 auto; }
+    
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 12px 16px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid var(--card-border); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3); }
+    .brand-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+    .brand-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .badge-status { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; padding: 5px 12px; border-radius: 20px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .badge-dot { width: 7px; height: 7px; background: #34d399; border-radius: 50%; box-shadow: 0 0 10px #34d399; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+    /* Nav Tabs */
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-muted); padding: 9px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
+    .tab-btn:hover { border-color: var(--primary); color: #fff; }
+    .tab-btn.active { background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
+
+    /* Alert Banner */
+    .alert-banner { background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
+    .alert-left { display: flex; align-items: center; gap: 10px; }
+    .alert-btn { background: #38bdf8; color: #0f172a; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; white-space: nowrap; transition: 0.2s; }
+    .alert-btn:hover { background: #7dd3fc; }
+
+    /* Top KPI Metric Cards Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (min-width: 640px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; } }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px; position: relative; overflow: hidden; }
+    .kpi-title { font-size: 12px; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .kpi-val { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+    .kpi-sub { font-size: 11px; margin-top: 4px; font-weight: 600; }
+    .sub-green { color: #34d399; }
+    .sub-rose { color: #fb7185; }
+    .sub-sky { color: #38bdf8; }
+    .sub-amber { color: #fbbf24; }
+
+    /* Section Headers */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+    .sec-title { font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .sec-action { font-size: 12px; color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    /* Gaon Trip Card */
+    .card-gaon { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .gaon-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .gaon-tag { background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .gaon-list { display: flex; flex-direction: column; gap: 8px; }
+    .gaon-item { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+
+    /* Tasks Center */
+    .task-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: all 0.2s ease; }
+    .task-card:hover { border-color: rgba(56, 189, 248, 0.4); }
+    .task-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .task-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; color: #fff; font-size: 12px; font-weight: 800; }
+    .task-checkbox:hover { border-color: #38bdf8; }
+    .task-title { font-size: 13px; font-weight: 600; color: #f1f5f9; line-height: 1.35; }
+    .task-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+    .pill-reminder { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .cal-btn { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .cal-btn:hover { background: #38bdf8; color: #0f172a; }
+
+    /* Category Bars */
+    .cat-bar-wrap { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .cat-row { margin-bottom: 12px; }
+    .cat-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .bar-bg { background: #1e293b; height: 7px; border-radius: 10px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); height: 100%; border-radius: 10px; }
+
+    /* Copy Cards Grid */
+    .vault-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (min-width: 640px) { .vault-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+    .vault-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; cursor: pointer; transition: all 0.2s ease; }
+    .vault-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .vault-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .vault-title { font-size: 12px; font-weight: 700; color: #fff; }
+    .vault-sub { font-size: 11px; color: var(--text-muted); line-height: 1.3; margin-top: 2px; }
+    .vault-pill { background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+    /* KYC Full Cards */
+    .kyc-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+    .kyc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .kyc-name { font-size: 16px; font-weight: 700; color: #fff; }
+    .kyc-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+    .kyc-item { background: rgba(30, 41, 59, 0.5); padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(51, 65, 85, 0.5); cursor: pointer; transition: 0.2s; }
+    .kyc-item:hover { border-color: #38bdf8; }
+    .kyc-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .kyc-val { font-size: 13px; font-weight: 700; color: #38bdf8; margin-top: 2px; font-family: monospace; }
+
+    /* AI Assistant Card & Quick Chips */
+    .search-wrap { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search-box { flex: 1; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 16px; color: #fff; font-size: 14px; outline: none; }
+    .search-box:focus { border-color: var(--primary); }
+    .search-btn { background: linear-gradient(135deg, #0284c7, #2563eb); border: none; color: #fff; padding: 0 18px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .chip { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--card-border); padding: 6px 11px; border-radius: 20px; font-size: 12px; color: #cbd5e1; cursor: pointer; transition: 0.2s; }
+    .chip:hover { border-color: var(--primary); color: #fff; }
+    .ai-reply { background: var(--card-bg); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 16px; padding: 16px; display: none; margin-bottom: 16px; line-height: 1.6; }
+
+    /* Note Input Box */
+    .note-wrap { display: flex; gap: 8px; margin-bottom: 16px; }
+    .note-input { flex: 1; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 14px; color: #fff; font-size: 13px; outline: none; }
+    .note-btn { background: #10b981; border: none; color: #fff; padding: 0 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0284c7; color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: none; z-index: 999; }
+    
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">Awais Pocket Brain</div>
+          <div class="brand-sub" id="clockIST">Connecting live to Notion...</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="badge-status">
+          <span class="badge-dot"></span>
+          <span>ONLINE 24/7</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+      <button class="tab-btn" onclick="switchTab('kaam')">📋 Kaam Tracker (<span id="tabPendingCount">20</span>)</button>
+      <button class="tab-btn" onclick="switchTab('kharcha')">💰 Kharcha & Kamai</button>
+      <button class="tab-btn" onclick="switchTab('gaon')">🏡 Gaon Trip</button>
+      <button class="tab-btn" onclick="switchTab('kyc')">🪪 Family KYC</button>
+      <button class="tab-btn" onclick="switchTab('assistant')">🤖 AI Assistant</button>
+    </div>
+
+    <!-- Phone Push Alert Banner -->
+    <div class="alert-banner">
+      <div class="alert-left">
+        <span style="font-size:18px;">🔔</span>
+        <span><strong>Mobile Push Alerts:</strong> Reminders ka phone par notification chahiye to Telegram bot me 1 click karein!</span>
+      </div>
+      <a href="https://t.me/awais_notion_24_bot?start=alerts" target="_blank" class="alert-btn">Enable Alerts ➔</a>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: EXECUTIVE DASHBOARD -->
+    <!-- ======================================================== -->
+    <div id="view-dashboard" class="tab-view active">
+      <!-- 4 Top KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title"><span>Kamai (Salary)</span> <span>🟢</span></div>
+          <div class="kpi-val" id="kpiIncome">₹47,350</div>
+          <div class="kpi-sub sub-green">October 2026 Active</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title"><span>Total Kharcha</span> <span>🔴</span></div>
+          <div class="kpi-val" id="kpiExpense">₹38,347.61</div>
+          <div class="kpi-sub sub-rose">46 Transactions</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title"><span>Net Bachat</span> <span>💎</span></div>
+          <div class="kpi-val" id="kpiSavings">₹9,002.39</div>
+          <div class="kpi-sub sub-sky">+19.0% Savings Rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title"><span>Pending Kaam</span> <span>⏳</span></div>
+          <div class="kpi-val" id="kpiTasks">20</div>
+          <div class="kpi-sub sub-amber">Action Items Due</div>
+        </div>
+      </div>
+
+      <!-- Upcoming Gaon Trip Widget -->
+      <div class="card-gaon">
+        <div class="gaon-header">
+          <div>
+            <div style="font-size:15px; font-weight:800; color:#fff;">🏡 Upcoming Gaon Visit (Trip 6)</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">31-Oct to 03-Nov 2026 (4 Din Chutti)</div>
+          </div>
+          <div class="gaon-tag">🚨 30-Oct Tatkal 10:50 AM</div>
+        </div>
+        <div class="gaon-list">
+          <div class="gaon-item">📜 <strong>Marriage Certificate:</strong> SGP ke Khaji Sahab se Abba ka marriage certificate collect karna.</div>
+          <div class="gaon-item">📱 <strong>SIM Handover:</strong> Tasleem ji ko new SIM lena aur Attaullah bhaiya ko dena.</div>
+          <div class="gaon-item">🪪 <strong>PAN-Aadhaar DOB:</strong> Abba ka PAN-Aadhaar match ke liye sahi DOB confirm karke apply karna.</div>
+          <div class="gaon-item">🔌 <strong>Chargers:</strong> Vivo ka charger (Abba phone) aur Dukan wala charger lena.</div>
+          <div class="gaon-item">📱 <strong>Translation App:</strong> Abba ke naye mobile me "English to Kannada translate wala app" daalna.</div>
+          <div class="gaon-item">🏦 <strong>Indian Bank ATM:</strong> Siruguppa branch jakar naya ATM card lena (20 min work).</div>
+        </div>
+      </div>
+
+      <!-- Urgent Reminders & Schedule -->
+      <div class="sec-header">
+        <div class="sec-title">⏰ Scheduled Reminders & Actions</div>
+        <a href="javascript:void(0)" onclick="switchTab('kaam')" class="sec-action">View All Tasks ➔</a>
+      </div>
+      <div id="urgentRemindersList"></div>
+
+      <!-- Kharcha Category Breakdown Bars -->
+      <div class="sec-header">
+        <div class="sec-title">📊 October Expense Breakdown</div>
+        <a href="javascript:void(0)" onclick="switchTab('kharcha')" class="sec-action">Full Finance Hub ➔</a>
+      </div>
+      <div class="cat-bar-wrap" id="dashCatBars"></div>
+
+      <!-- 1-Tap Copy Vault Grid -->
+      <div class="sec-header">
+        <div class="sec-title">⚡ 1-Tap Quick Copy Vault</div>
+      </div>
+      <div class="vault-grid">
+        <div class="vault-card" onclick="copyText('MZS1351410', 'Ammi Voter ID: MZS1351410')">
+          <div class="vault-top"><span style="font-size:18px;">🧕</span> <span class="vault-pill">Copy EPIC</span></div>
+          <div class="vault-title">Ammi Voter ID</div>
+          <div class="vault-sub">MZS1351410 (Part 57/445)</div>
+        </div>
+        <div class="vault-card" onclick="copyText('Tuba Furniture, Boy\'s Hostel, Near Tipu Sultan Circle, Sindhanur Main Road, Siruguppa, Karnataka - 583121', 'Address: Tuba Furniture')">
+          <div class="vault-top"><span style="font-size:18px;">🪑</span> <span class="vault-pill">Copy Dukan</span></div>
+          <div class="vault-title">Tuba Furniture (Dukan)</div>
+          <div class="vault-sub">Near Tipu Sultan Circle, Siruguppa</div>
+        </div>
+        <div class="vault-card" onclick="copyText('141 A, Near Jamiya Masjeed, Ward No 2, Desanur, Siruguppa, Ballari - 583121', 'Address: 141 A Desanur')">
+          <div class="vault-top"><span style="font-size:18px;">🏠</span> <span class="vault-pill">Copy Ghar</span></div>
+          <div class="vault-title">House No: 141 A</div>
+          <div class="vault-sub">Near Jamiya Masjeed, Desanur</div>
+        </div>
+        <div class="vault-card" onclick="copyText('62378030320', 'SBI A/C: 62378030320')">
+          <div class="vault-top"><span style="font-size:18px;">🔵</span> <span class="vault-pill">Copy A/C</span></div>
+          <div class="vault-title">SBI (Siruguppa)</div>
+          <div class="vault-sub">62378030320 • SBIN0040119</div>
+        </div>
+        <div class="vault-card" onclick="copyText('5449154932', 'Kotak A/C: 5449154932')">
+          <div class="vault-top"><span style="font-size:18px;">🔴</span> <span class="vault-pill">Copy A/C</span></div>
+          <div class="vault-title">Kotak 811</div>
+          <div class="vault-sub">5449154932 • KKBK0008296</div>
+        </div>
+        <div class="vault-card" onclick="copyText('9945', 'Abba UPI PIN: 9945')">
+          <div class="vault-top"><span style="font-size:18px;">🟢</span> <span class="vault-pill">Copy PIN</span></div>
+          <div class="vault-title">Abba Indian Bank</div>
+          <div class="vault-sub">PIN: 9945 • 9945161755</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: KAAM & REMINDERS TRACKER -->
+    <!-- ======================================================== -->
+    <div id="view-kaam" class="tab-view">
+      <div class="sec-header">
+        <div class="sec-title">📋 Active Kaam & Task Manager</div>
+      </div>
+      
+      <!-- Quick Add Task -->
+      <div class="note-wrap">
+        <input type="text" id="newTaskInput" class="note-input" placeholder="Naya task add karein (e.g. Kal subah bank jana hai)..." />
+        <button class="note-btn" onclick="addNewTask()">+ Add Task</button>
+      </div>
+
+      <div id="fullTasksList"></div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: FINANCIALS & EXPENSES -->
+    <!-- ======================================================== -->
+    <div id="view-kharcha" class="tab-view">
+      <div class="sec-header">
+        <div class="sec-title">📈 3-Mahine Ka Financial Comparison</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">August 2026</div>
+          <div style="font-size:14px; font-weight:700; color:#34d399;">Inc: ₹32,654</div>
+          <div style="font-size:14px; font-weight:700; color:#fb7185;">Exp: ₹17,979</div>
+          <div class="kpi-sub sub-sky">Net: ₹14,675</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">September 2026</div>
+          <div style="font-size:14px; font-weight:700; color:#34d399;">Inc: ₹34,589</div>
+          <div style="font-size:14px; font-weight:700; color:#fb7185;">Exp: ₹20,977</div>
+          <div class="kpi-sub sub-sky">Net: ₹13,612</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">October 2026</div>
+          <div style="font-size:14px; font-weight:700; color:#34d399;">Inc: ₹47,350</div>
+          <div style="font-size:14px; font-weight:700; color:#fb7185;">Exp: ₹38,347.61</div>
+          <div class="kpi-sub sub-sky">Net: ₹9,002.39</div>
+        </div>
+        <div class="kpi-card" style="background:rgba(30,58,138,0.25); border-color:rgba(56,189,248,0.4);">
+          <div class="kpi-title">🏆 3-Month Grand</div>
+          <div style="font-size:14px; font-weight:800; color:#34d399;">Inc: ₹1,14,593</div>
+          <div style="font-size:14px; font-weight:800; color:#fb7185;">Exp: ₹77,303.61</div>
+          <div class="kpi-sub sub-sky" style="font-size:13px; font-weight:800;">Bachat: ₹37,289.39</div>
+        </div>
+      </div>
+
+      <div class="sec-header">
+        <div class="sec-title">📂 October Category Breakdown</div>
+      </div>
+      <div class="cat-bar-wrap" id="fullCatBars"></div>
+
+      <div class="sec-header">
+        <div class="sec-title">🧾 Recent Expenses</div>
+      </div>
+      <div id="recentExpList"></div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: GAON TRIP HUB -->
+    <!-- ======================================================== -->
+    <div id="view-gaon" class="tab-view">
+      <div class="card-gaon">
+        <div class="gaon-header">
+          <div>
+            <div style="font-size:17px; font-weight:800; color:#fff;">🏡 Gaon Trip Checklist (31-Oct to 03-Nov)</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">4 Din Chutti • Thane to Adoni (Sleeper Tatkal @ 11:00 AM)</div>
+          </div>
+        </div>
+        <div id="gaonTasksList" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: FAMILY KYC VAULT -->
+    <!-- ======================================================== -->
+    <div id="view-kyc" class="tab-view">
+      <div class="sec-header">
+        <div class="sec-title">🪪 Family Golden KYC & Identity Hub</div>
+      </div>
+      <div id="familyKycList"></div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 6: AI ASSISTANT & QUICK NOTES -->
+    <!-- ======================================================== -->
+    <div id="view-assistant" class="tab-view">
+      <!-- Search -->
+      <div class="search-wrap">
+        <input type="text" id="queryInput" class="search-box" placeholder="Poochho: Dukan ka address, Epic reshma, Iss month ka kharcha..." />
+        <button class="search-btn" onclick="sendQuery()">➔ Poochhein</button>
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="chips-wrap">
+        <div class="chip" onclick="askQuick('Epic reshma')">🧕 Epic Reshma (Ammi)</div>
+        <div class="chip" onclick="askQuick('Dukan ka address')">🪑 Dukan (Tuba Furniture)</div>
+        <div class="chip" onclick="askQuick('Iss month ka kharcha')">📊 Is Mahine Ka Kharcha</div>
+        <div class="chip" onclick="askQuick('Last 3 mahine ka kharcha')">📈 Last 3 Mahine Ka Hisab</div>
+        <div class="chip" onclick="askQuick('income kitna hai aur expenses kitna hai')">💰 Income & Expense Hisab</div>
+        <div class="chip" onclick="askQuick('house no kya hai')">🏠 House No (141 A)</div>
+        <div class="chip" onclick="askQuick('gaon plan')">🏡 Gaon Plan (31-Oct)</div>
+        <div class="chip" onclick="askQuick('tatkal ticket booking')">🚆 Tatkal Booking</div>
+        <div class="chip" onclick="askQuick('shalu bhai call reminder')">📞 Shalu Call (11:05 AM)</div>
+        <div class="chip" onclick="askQuick('mere sbi bank ka sara details dedo')">🏦 SBI Account</div>
+        <div class="chip" onclick="askQuick('abba ka indian bank details')">🏦 Abba Indian Bank</div>
+        <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi Passwords</div>
+      </div>
+
+      <!-- Reply Box -->
+      <div class="ai-reply" id="resultCard">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:700; color:#38bdf8;">
+          <span>🤖 AI JAWAB:</span>
+          <span style="cursor:pointer; color:#ef4444;" onclick="closeResult()">✕ Close</span>
+        </div>
+        <div id="resultBody"></div>
+      </div>
+
+      <!-- Note Saver -->
+      <div class="sec-header">
+        <div class="sec-title">📝 Quick Note / Brain Dump (Save to Notion)</div>
+      </div>
+      <div class="note-wrap">
+        <input type="text" id="noteInput" class="note-input" placeholder="Koi bhi baat ya note likhein..." />
+        <button class="note-btn" onclick="saveDirectNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    let DASHBOARD_DATA = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2200);
+    }
+
+    function copyText(val, label) {
+      navigator.clipboard.writeText(val).then(() => {
+        showToast('✅ ' + (label || 'Copied!'));
+      }).catch(() => {
+        showToast('Value: ' + val);
+      });
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(name));
+      if (activeBtn) activeBtn.classList.add('active');
+      const v = document.getElementById('view-' + name);
+      if (v) v.classList.add('active');
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const options = { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+      document.getElementById('clockIST').innerText = now.toLocaleString('en-IN', options) + ' • Render Cloud 24/7';
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function addToCalendar(title, timeStr) {
+      let startIso, endIso;
+      if (timeStr && timeStr.includes('T')) {
+        const d = new Date(timeStr);
+        startIso = d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+        const end = new Date(d.getTime() + 30 * 60000);
+        endIso = end.toISOString().replace(/-|:|\.\d\d\d/g, "");
+      } else {
+        const now = new Date();
+        startIso = now.toISOString().replace(/-|:|\.\d\d\d/g, "");
+        const end = new Date(now.getTime() + 30 * 60000);
+        endIso = end.toISOString().replace(/-|:|\.\d\d\d/g, "");
+      }
+      const url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) + "&dates=" + startIso + "/" + endIso + "&details=" + encodeURIComponent("Awais Pocket Brain Reminder");
+      window.open(url, '_blank');
+    }
+
+    async function toggleTask(id, elem) {
+      elem.style.background = '#34d399';
+      elem.innerHTML = '✓';
+      showToast('Marking Done in Notion...');
+      try {
+        const res = await fetch('/api/task/toggle?id=' + id + '&status=' + encodeURIComponent('✅ Done'), { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) {
+          showToast('✅ Notion me Done mark ho gaya!');
+          const title = elem.nextElementSibling.querySelector('.task-title');
+          if (title) title.style.textDecoration = 'line-through';
+          setTimeout(loadDashboard, 1500);
+        }
+      } catch(e) {
+        showToast('Error updating task');
+      }
+    }
+
+    async function addNewTask() {
+      const inp = document.getElementById('newTaskInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      showToast('Adding to Notion Kaam Tracker...');
+      try {
+        const res = await fetch('/api/task/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: val })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          showToast('✅ Naya Task Saved!');
+          inp.value = '';
+          loadDashboard();
+        }
+      } catch(e) { showToast('Error adding task'); }
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+        if (!data.ok) return;
+        DASHBOARD_DATA = data;
+
+        // KPI
+        document.getElementById('kpiIncome').innerText = data.metrics.incomeFormatted;
+        document.getElementById('kpiExpense').innerText = data.metrics.expenseFormatted;
+        document.getElementById('kpiSavings').innerText = data.metrics.savingsFormatted;
+        document.getElementById('kpiTasks').innerText = data.metrics.pendingCount;
+        document.getElementById('tabPendingCount').innerText = data.metrics.pendingCount;
+
+        // Category Bars
+        const catHtml = data.metrics.categories.map(c => `
+          <div class="cat-row">
+            <div class="cat-meta">
+              <span>${c.name}</span>
+              <span><strong>${c.formatted}</strong> (${c.percent}%)</span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill" style="width: ${c.percent}%;"></div></div>
+          </div>
+        `).join('');
+        document.getElementById('dashCatBars').innerHTML = catHtml;
+        const fullCat = document.getElementById('fullCatBars');
+        if (fullCat) fullCat.innerHTML = catHtml;
+
+        // Urgent Reminders
+        const reminders = data.tasks.filter(t => t.reminder && t.reminder.includes('T')).slice(0, 4);
+        document.getElementById('urgentRemindersList').innerHTML = reminders.map(t => `
+          <div class="task-card">
+            <div class="task-left">
+              <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+              <div>
+                <div class="task-title">${t.title}</div>
+                <div class="task-meta">
+                  <span class="pill-reminder">⏰ ${t.reminder.split('T')[1].substring(0, 5)}</span>
+                  <span>📅 ${t.reminder.split('T')[0]}</span>
+                </div>
+              </div>
+            </div>
+            <a href="javascript:void(0)" onclick="addToCalendar('${t.title.replace(/'/g, "\\'")}', '${t.reminder}')" class="cal-btn">📅 Alarm</a>
+          </div>
+        `).join('') || '<div style="font-size:12px; color:#94a3b8; padding:8px;">No urgent reminders for today.</div>';
+
+        // Full Tasks List
+        const fullList = document.getElementById('fullTasksList');
+        if (fullList) {
+          fullList.innerHTML = data.tasks.map(t => `
+            <div class="task-card">
+              <div class="task-left">
+                <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+                <div>
+                  <div class="task-title">${t.title}</div>
+                  <div class="task-meta">
+                    ${t.reminder ? `<span class="pill-reminder">⏰ ${t.reminder.replace('T', ' ').substring(0, 16)}</span>` : ''}
+                    <span>📅 ${t.date || 'Active'}</span>
+                  </div>
+                </div>
+              </div>
+              ${t.reminder ? `<a href="javascript:void(0)" onclick="addToCalendar('${t.title.replace(/'/g, "\\'")}', '${t.reminder}')" class="cal-btn">📅 Alarm</a>` : ''}
+            </div>
+          `).join('');
+        }
+
+        // Gaon Tasks List
+        const gaonEl = document.getElementById('gaonTasksList');
+        if (gaonEl) {
+          gaonEl.innerHTML = data.gaonTasks.map(t => `
+            <div class="task-card" style="background:rgba(15,23,42,0.6);">
+              <div class="task-left">
+                <div class="task-checkbox" onclick="toggleTask('${t.id}', this)"></div>
+                <div>
+                  <div class="task-title">${t.title}</div>
+                  <div class="task-meta"><span>📅 31-Oct Trip Task</span></div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Recent Expenses
+        const recList = document.getElementById('recentExpList');
+        if (recList) {
+          recList.innerHTML = data.metrics.recentExpenses.map(e => `
+            <div class="task-card">
+              <div class="task-left">
+                <div>
+                  <div class="task-title">${e.name}</div>
+                  <div class="task-meta"><span>📂 ${e.cat}</span> • <span>📅 ${e.date}</span></div>
+                </div>
+              </div>
+              <div style="font-size:14px; font-weight:800; color:#fb7185;">${e.formatted}</div>
+            </div>
+          `).join('');
+        }
+
+        // Family KYC Cards
+        const kycEl = document.getElementById('familyKycList');
+        if (kycEl) {
+          kycEl.innerHTML = data.familyKYC.map(k => `
+            <div class="kyc-card">
+              <div class="kyc-header">
+                <div>
+                  <div class="kyc-name">${k.relation}: ${k.name}</div>
+                  <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${k.details}</div>
+                </div>
+              </div>
+              <div class="kyc-row">
+                <div class="kyc-item" onclick="copyText('${k.voter}', '${k.name} EPIC')">
+                  <div class="kyc-label">Voter ID (EPIC)</div>
+                  <div class="kyc-val">${k.voter}</div>
+                </div>
+                <div class="kyc-item" onclick="copyText('${k.aadhaar.replace(/[^0-9]/g, '')}', '${k.name} Aadhaar')">
+                  <div class="kyc-label">Aadhaar Card</div>
+                  <div class="kyc-val">${k.aadhaar}</div>
+                </div>
+                <div class="kyc-item" onclick="copyText('${k.pan}', '${k.name} PAN')">
+                  <div class="kyc-label">PAN Card</div>
+                  <div class="kyc-val">${k.pan}</div>
+                </div>
+                <div class="kyc-item" onclick="copyText('${k.mobile}', '${k.name} Mobile')">
+                  <div class="kyc-label">Mobile Number</div>
+                  <div class="kyc-val">${k.mobile}</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch(e) {
+        console.error('Dashboard load err:', e);
+      }
+    }
+
+    // AI Query Handlers
+    function askQuick(text) {
+      switchTab('assistant');
+      document.getElementById('queryInput').value = text;
+      sendQuery();
+    }
+
+    function closeResult() {
+      document.getElementById('resultCard').style.display = 'none';
+    }
+
+    function renderMarkdown(md) {
+      if (!md) return '';
+      return md
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        .replace(/\`([^\`]+)\`/g, '<code onclick="copyText(\\'$1\\', \\'Copied: $1\\')" style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; cursor:pointer;">$1</code>')
+        .replace(/^[•\-]\s+(.*)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>')
+        .replace(/^(\d+)\.\s+(.*)$/gm, '<div style="margin-bottom: 6px;"><strong>$1.</strong> $2</div>')
+        .replace(/\n/g, '<br>');
+    }
+
+    async function sendQuery() {
+      const q = document.getElementById('queryInput').value.trim();
+      if (!q) return;
+      const card = document.getElementById('resultCard');
+      const body = document.getElementById('resultBody');
+      card.style.display = 'block';
+      body.innerHTML = '<span style="color:#38bdf8;">🧠 Searching Notion databases... ⏳</span>';
+      try {
+        const res = await fetch('/api/ask?q=' + encodeURIComponent(q));
+        const json = await res.json();
+        body.innerHTML = renderMarkdown(json.answer || 'Koi jawab nahi mila.');
+      } catch (e) {
+        body.innerHTML = '<span style="color:#ef4444;">Error connecting to assistant: ' + e.message + '</span>';
+      }
+    }
+
+    async function saveDirectNote() {
+      const note = document.getElementById('noteInput').value.trim();
+      if (!note) return;
+      showToast('Saving note to Notion... ⏳');
+      try {
+        const res = await fetch('/api/ask?q=' + encodeURIComponent('Note: ' + note));
+        const json = await res.json();
+        document.getElementById('noteInput').value = '';
+        showToast('✅ Note permanently saved in Notion!');
+        document.getElementById('resultCard').style.display = 'block';
+        document.getElementById('resultBody').innerHTML = renderMarkdown(json.answer);
+      } catch(e) {
+        showToast('Error saving note');
+      }
+    }
+
+    document.getElementById('queryInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendQuery(); });
+    document.getElementById('noteInput').addEventListener('keypress', e => { if (e.key === 'Enter') saveDirectNote(); });
+
+    loadDashboard();
+  </script>
+</body>
+</html>
