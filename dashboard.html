@@ -167,6 +167,41 @@
       <button class="tab-btn" data-tab="assistant" onclick="switchTab('assistant')">🤖 AI Assistant</button>
     </div>
 
+    
+    <!-- ======================================================== -->
+    <!-- PERMANENT TOP SEARCH BAR (VISIBLE ON ALL PAGES / TABS) -->
+    <!-- ======================================================== -->
+    <div class="global-search-card" style="background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); border: 1px solid rgba(56,189,248,0.35); border-radius: 16px; padding: 14px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:12px; font-weight:800; color:#38bdf8; letter-spacing:0.5px; text-transform:uppercase;">🔍 Instant Notion Search & AI Assistant</span>
+        <span style="font-size:11px; color:var(--text-muted);">Live 24/7 • Press Enter to search</span>
+      </div>
+      <div class="search-wrap" style="margin-bottom: 8px;">
+        <input type="text" id="queryInput" class="search-box" placeholder="Poochho: Aadhaar website, Ammi voter ID, Dukan address, October kharcha..." />
+        <button class="search-btn" onclick="sendQuery()">➔ Poochhein</button>
+      </div>
+
+      <!-- Quick Search Chips -->
+      <div class="chips-wrap" style="margin-bottom: 0;">
+        <div class="chip" onclick="askQuick('aadhaar website')">🌐 Aadhaar Website (UIDAI)</div>
+        <div class="chip" onclick="askQuick('check aadhaar card')">🪪 Aadhaar Card Check</div>
+        <div class="chip" onclick="askQuick('Epic reshma')">🧕 Epic Reshma (Ammi)</div>
+        <div class="chip" onclick="askQuick('family aadhaar')">👥 Family KYC</div>
+        <div class="chip" onclick="askQuick('Dukan ka address')">🪑 Dukan Address</div>
+        <div class="chip" onclick="askQuick('Iss month ka kharcha')">📊 October Kharcha</div>
+        <div class="chip" onclick="askQuick('income kitna hai aur expenses kitna hai')">💰 Income & Expense</div>
+      </div>
+
+      <!-- Live AI Reply Card (Visible when searched) -->
+      <div class="ai-reply" id="resultCard" style="display:none; margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:700; color:#38bdf8;">
+          <span>🤖 AI JAWAB:</span>
+          <span style="cursor:pointer; color:#ef4444; font-size:13px; font-weight:800;" onclick="closeResult()">✕ Band Karein</span>
+        </div>
+        <div id="resultBody"></div>
+      </div>
+    </div>
+
     <!-- Phone Push Alert Banner -->
     <div class="alert-banner">
       <div class="alert-left">
@@ -242,6 +277,11 @@
         <div class="sec-title">⚡ 1-Tap Quick Copy Vault</div>
       </div>
       <div class="vault-grid">
+        <div class="vault-card" onclick="window.open('https://myaadhaar.uidai.gov.in/', '_blank')">
+          <div class="vault-top"><span style="font-size:18px;">🌐</span> <span class="vault-pill" style="background:#0284c7; color:#fff;">UIDAI Portal</span></div>
+          <div class="vault-title">Aadhaar Website (UIDAI)</div>
+          <div class="vault-sub">myaadhaar.uidai.gov.in ➔</div>
+        </div>
         <div class="vault-card" onclick="copyText('MZS1351410', 'Ammi Voter ID: MZS1351410')">
           <div class="vault-top"><span style="font-size:18px;">🧕</span> <span class="vault-pill">Copy EPIC</span></div>
           <div class="vault-title">Ammi Voter ID</div>
@@ -366,15 +406,19 @@
     <!-- TAB 6: AI ASSISTANT & QUICK NOTES -->
     <!-- ======================================================== -->
     <div id="view-assistant" class="tab-view">
-      <!-- Search -->
-      <div class="search-wrap">
-        <input type="text" id="queryInput" class="search-box" placeholder="Poochho: Dukan ka address, Epic reshma, Iss month ka kharcha..." />
-        <button class="search-btn" onclick="sendQuery()">➔ Poochhein</button>
+      <div class="sec-header">
+        <div class="sec-title">🤖 AI Assistant & Quick Topics</div>
       </div>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+        💡 <em>Upar top par search box har page par hamesha active hai. Yahan neeche diye gaye topics par 1-tap karke instant answer le sakte hain ya apna quick note Notion me save kar sakte hain:</em>
+      </p>
 
-      <!-- Quick Chips -->
-      <div class="chips-wrap">
+      <!-- Extended Quick Chips -->
+      <div class="chips-wrap" style="margin-bottom: 20px;">
+        <div class="chip" onclick="askQuick('aadhaar website')">🌐 Aadhaar Official Portal (UIDAI)</div>
+        <div class="chip" onclick="askQuick('check aadhaar status')">🔍 Check Aadhaar Status</div>
         <div class="chip" onclick="askQuick('Epic reshma')">🧕 Epic Reshma (Ammi)</div>
+        <div class="chip" onclick="askQuick('family aadhaar')">👥 Family Golden KYC</div>
         <div class="chip" onclick="askQuick('Dukan ka address')">🪑 Dukan (Tuba Furniture)</div>
         <div class="chip" onclick="askQuick('Iss month ka kharcha')">📊 Is Mahine Ka Kharcha</div>
         <div class="chip" onclick="askQuick('Last 3 mahine ka kharcha')">📈 Last 3 Mahine Ka Hisab</div>
@@ -386,15 +430,6 @@
         <div class="chip" onclick="askQuick('mere sbi bank ka sara details dedo')">🏦 SBI Account</div>
         <div class="chip" onclick="askQuick('abba ka indian bank details')">🏦 Abba Indian Bank</div>
         <div class="chip" onclick="askQuick('wifi password kya hai')">🔑 Wi-Fi Passwords</div>
-      </div>
-
-      <!-- Reply Box -->
-      <div class="ai-reply" id="resultCard">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:700; color:#38bdf8;">
-          <span>🤖 AI JAWAB:</span>
-          <span style="cursor:pointer; color:#ef4444;" onclick="closeResult()">✕ Close</span>
-        </div>
-        <div id="resultBody"></div>
       </div>
 
       <!-- Note Saver -->
@@ -650,8 +685,9 @@
 
     // AI Query Handlers
     function askQuick(text) {
-      switchTab('assistant');
-      document.getElementById('queryInput').value = text;
+      const input = document.getElementById('queryInput');
+      input.value = text;
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
       sendQuery();
     }
 
@@ -661,14 +697,17 @@
 
     function renderMarkdown(md) {
       if (!md) return '';
-      return md
+      let res = md
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '###LINK###$1###HREF###$2###ENDLINK###')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         .replace(/`([^`]+)`/g, '<code style="background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px;">$1</code>')
         .replace(/^[•\-]\s+(.*)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>')
         .replace(/^(\d+)\.\s+(.*)$/gm, '<div style="margin-bottom: 6px;"><strong>$1.</strong> $2</div>')
-        .replace(/\n/g, '<br>');
+        .replace(/\n/g, '<br>')
+        .replace(/###LINK###(.*?)###HREF###(.*?)###ENDLINK###/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:700;">$1 🔗</a>');
+      return res;
     }
 
     async function sendQuery() {
@@ -677,6 +716,7 @@
       const card = document.getElementById('resultCard');
       const body = document.getElementById('resultBody');
       card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       body.innerHTML = '<span style="color:#38bdf8;">🧠 Searching Notion databases... ⏳</span>';
       try {
         const res = await fetch('/api/ask?q=' + encodeURIComponent(q));
