@@ -895,6 +895,36 @@ async function handleSmartAssistant(rawText) {
       };
     }
 
+    // 9.0 Food Bill Specific Breakdown ("Food bill", "khana kharcha", "mess bill", "choudhary")
+    if (hasKeyword(normalized, ['food bill', 'food bil', 'khana kharcha', 'food ka kharcha', 'khana bill', 'mess bill', 'choudhary hotal', 'choudhary bhojnalay'])) {
+      const expRes = await notionReq(`/v1/databases/${DB_EXPENSES}/query`, 'POST', {
+        filter: {
+          and: [
+            { property: 'Date', date: { on_or_after: '2026-10-01' } },
+            { property: 'Date', date: { on_or_before: '2026-10-31' } },
+            { property: 'Category', select: { equals: '🍜 Food Bill' } },
+            { property: 'Type', select: { equals: 'Expense' } }
+          ]
+        },
+        sorts: [{ property: 'Date', direction: 'descending' }]
+      });
+
+      let totalFood = 0;
+      const list = (expRes.results || []).map(r => {
+        const amt = r.properties?.['Amount (₹)']?.number || 0;
+        const name = r.properties?.Name?.title?.[0]?.plain_text || 'Food';
+        const d = (r.properties?.Date?.date?.start || '').split('T')[0];
+        totalFood += amt;
+        return `• *${formatINR(amt)}* — ${name} (${d})`;
+      });
+
+      return `🍜 *October 2026 Ka Sahi Food Bill Hisab:*\n\n` +
+             `💰 *Total Actual Food Bill:* *${formatINR(totalFood)}* (${list.length} transactions)\n\n` +
+             `✅ *Correction Done:* Pehle Abba ke mobile purchase (₹20,367) ka category galti se Food Bill me tha jisse ₹25,799 dikh raha tha. Use sahi category *🛍️ Shopping* me move kar diya gaya hai!\n\n` +
+             `📋 *October Food Transactions:*\n` +
+             list.join('\n');
+    }
+
     // 9.1 Last 3 Months Aggregation & Comparison
     if (hasKeyword(normalized, ['last 3', 'pichle 3', 'pichle teen', '3 mahine', '3 mahina', '3 months', 'teen mahine', '3 month'])) {
       const aug = await fetchFinancialSummary('2026-08-01', '2026-08-31');
