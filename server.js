@@ -846,7 +846,7 @@ async function handleSmartAssistant(rawText) {
   // =========================================================
   // 9. EXPENSE, INCOME & FINANCIAL ENGINE (SMART DATE & PERIOD PARSER)
   // =========================================================
-  if (hasKeyword(normalized, ['kharch', 'kharcha', 'kharche', 'expense', 'expenses', 'spent', 'food bill', 'total kharcha', 'hisab', 'income', 'salary', 'kamai', 'bachat', 'saving', 'savings'])) {
+  if (hasKeyword(normalized, ['kharch', 'kharcha', 'kharche', 'expense', 'expenses', 'spent', 'food', 'food bill', 'food bil', 'khana', 'total kharcha', 'hisab', 'income', 'salary', 'kamai', 'bachat', 'saving', 'savings'])) {
 
     // Helper to query expenses by date range and categorize Income vs Expense
     async function fetchFinancialSummary(startDate, endDate) {
