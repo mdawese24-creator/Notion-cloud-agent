@@ -537,7 +537,8 @@ const KNOWLEDGE_VAULT = {
              `• Voter ID (EPIC): \`UBB3353083\`\n` +
              `• Aadhaar: \`6687 0862 2572\`\n` +
              `• PAN Card: \`DYMPA6781D\`\n` +
-             `• Mobile: \`7619574514\``,
+             `• Mobile: \`7619574514\`\n\n` +
+             `🌐 *Official Aadhaar Portal (UIDAI):* [myaadhaar.uidai.gov.in](https://myaadhaar.uidai.gov.in/)`,
 
   sbi: `🏦 *State Bank of India (SBI Siruguppa)*\n\n` +
        `• *Account Holder:* S A Mohammed Awese\n` +
@@ -700,6 +701,31 @@ async function handleSmartAssistant(rawText) {
   // =========================================================
   if (hasKeyword(normalized, ['reshma', 'ammi', 'mummy', 'valida', 'ammi voter', 'epic reshma', 'reshma epic', 'reshma voter'])) {
     return KNOWLEDGE_VAULT.ammiKYC;
+  }
+
+  // =========================================================
+  // 3.15 AADHAAR OFFICIAL WEBSITE & PORTAL / STATUS CHECK
+  // =========================================================
+  if (hasKeyword(normalized, [
+    'aadhaar website', 'aadhar website', 'adhar website', 'uidai', 'myaadhaar',
+    'check aadhaar', 'check adhar', 'aadhaar card check', 'adhar card check',
+    'aadhaar check', 'adhar check', 'aadhaar portal', 'adhar portal',
+    'aadhaar link', 'adhar link', 'download aadhaar', 'download adhar',
+    'aadhaar status', 'adhar status', 'verify aadhaar', 'verify adhar'
+  ])) {
+    return `🪪 *Official Aadhaar Portal & Website (UIDAI):*\n\n` +
+           `🌐 *Direct Official Portal Links:*\n` +
+           `• *MyAadhaar Portal (Main):* [myaadhaar.uidai.gov.in](https://myaadhaar.uidai.gov.in/)\n` +
+           `• *Check Aadhaar Status:* [myaadhaar.uidai.gov.in/check-aadhaar-status](https://myaadhaar.uidai.gov.in/check-aadhaar-status)\n` +
+           `• *Download e-Aadhaar:* [myaadhaar.uidai.gov.in/genricDownloadAadhaar](https://myaadhaar.uidai.gov.in/genricDownloadAadhaar)\n` +
+           `• *Verify Aadhaar / Mobile:* [myaadhaar.uidai.gov.in/verify-email-mobile](https://myaadhaar.uidai.gov.in/verify-email-mobile)\n` +
+           `• *Official UIDAI Homepage:* [uidai.gov.in](https://uidai.gov.in/)\n\n` +
+           `📋 *Family Aadhaar Numbers (Ready to Use):*\n` +
+           `• *Awais:* \`7694 5296 4584\`\n` +
+           `• *Ammi (Reshma Banu):* \`9461 9458 9503\`\n` +
+           `• *Atif:* \`6687 0862 2572\`\n` +
+           `• *Abba (Mehaboob Basha):* Last 4: \`5595\` (Link DOB apply pending)\n\n` +
+           `💡 *Kaise check karein:* Upar diye gaye MyAadhaar link par click karke direct 'Check Enrollment/Update Status' ya 'Login with OTP' karein.`;
   }
 
   // =========================================================
