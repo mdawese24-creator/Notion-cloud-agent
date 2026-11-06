@@ -1231,18 +1231,83 @@ let telegramOffset = 0;
 let primaryTelegramChatId = process.env.TELEGRAM_CHAT_ID || null;
 const CHAT_FILE = path.join(__dirname, 'telegram_chat.json');
 
-try {
-  if (fs.existsSync(CHAT_FILE)) {
-    const d = JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8'));
-    if (d.chatId) primaryTelegramChatId = d.chatId;
-  }
-} catch(e) {}
-
-function saveTelegramChatId(chatId) {
-  primaryTelegramChatId = chatId;
+async function initTelegramChatId() {
+  if (primaryTelegramChatId) return primaryTelegramChatId;
   try {
-    fs.writeFileSync(CHAT_FILE, JSON.stringify({ chatId: chatId, updatedAt: new Date().toISOString() }));
+    if (fs.existsSync(CHAT_FILE)) {
+      const d = JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8'));
+      if (d.chatId) {
+        primaryTelegramChatId = String(d.chatId);
+        console.log('[Telegram Config] Loaded Chat ID from file:', primaryTelegramChatId);
+        return primaryTelegramChatId;
+      }
+    }
   } catch(e) {}
+
+  try {
+    const res = await notionReq('/v1/databases/' + DB_CAPTURE + '/query', 'POST', {
+      filter: {
+        property: 'Note / Baat',
+        title: { starts_with: '[CONFIG] Telegram Primary Chat ID' }
+      },
+      page_size: 1
+    });
+    if (res.results && res.results.length > 0) {
+      const summary = res.results[0].properties['Action Summary']?.rich_text?.[0]?.plain_text || '';
+      const m = summary.match(/\d{5,15}/);
+      if (m) {
+        primaryTelegramChatId = m[0];
+        console.log('[Telegram Config] Loaded Chat ID from Notion DB_CAPTURE:', primaryTelegramChatId);
+        try {
+          fs.writeFileSync(CHAT_FILE, JSON.stringify({ chatId: primaryTelegramChatId, updatedAt: new Date().toISOString() }));
+        } catch(e) {}
+        return primaryTelegramChatId;
+      }
+    }
+  } catch(e) {
+    console.error('[Telegram Config Error]', e.message);
+  }
+  return primaryTelegramChatId;
+}
+
+async function saveTelegramChatId(chatId) {
+  if (!chatId) return;
+  primaryTelegramChatId = String(chatId);
+  try {
+    fs.writeFileSync(CHAT_FILE, JSON.stringify({ chatId: primaryTelegramChatId, updatedAt: new Date().toISOString() }));
+  } catch(e) {}
+
+  // Persist to Notion DB_CAPTURE
+  try {
+    const searchRes = await notionReq('/v1/databases/' + DB_CAPTURE + '/query', 'POST', {
+      filter: {
+        property: 'Note / Baat',
+        title: { starts_with: '[CONFIG] Telegram Primary Chat ID' }
+      },
+      page_size: 1
+    });
+    if (searchRes.results && searchRes.results.length > 0) {
+      await notionReq('/v1/pages/' + searchRes.results[0].id, 'PATCH', {
+        properties: {
+          'Action Summary': { rich_text: [{ text: { content: String(chatId) } }] },
+          'Status': { select: { name: '✅ Processed' } }
+        }
+      });
+    } else {
+      await notionReq('/v1/pages', 'POST', {
+        parent: { database_id: DB_CAPTURE },
+        properties: {
+          'Note / Baat': { title: [{ text: { content: '[CONFIG] Telegram Primary Chat ID' } }] },
+          'Status': { select: { name: '✅ Processed' } },
+          'Category / Moved To': { select: { name: '📝 Note / Other' } },
+          'Action Summary': { rich_text: [{ text: { content: String(chatId) } }] }
+        }
+      });
+    }
+    console.log('[Telegram Config] Successfully saved Chat ID to Notion DB_CAPTURE:', chatId);
+  } catch(e) {
+    console.error('[Telegram Save Notion Error]', e.message);
+  }
 }
 
 function telegramApi(method, body) {
@@ -1271,12 +1336,15 @@ function telegramApi(method, body) {
 
 const alertedReminders = new Set();
 async function checkAndSendReminders() {
-  if (!primaryTelegramChatId) return;
+  if (!primaryTelegramChatId) {
+    await initTelegramChatId();
+    if (!primaryTelegramChatId) return;
+  }
   try {
     const today = getTodayIST();
     const res = await notionReq('/v1/databases/' + DB_KAAM + '/query', 'POST', {
       filter: { property: 'Status', select: { equals: '⏳ Pending' } },
-      page_size: 30
+      page_size: 50
     });
 
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -1290,14 +1358,29 @@ async function checkAndSendReminders() {
       const reminderRaw = r.properties['⏰ Reminder / Date']?.date?.start || '';
       if (!reminderRaw) continue;
 
-      if (reminderRaw.startsWith(today) && reminderRaw.includes('T')) {
-        const timePart = reminderRaw.split('T')[1].substring(0, 5);
-        const alertKey = id + '_' + today + '_' + timePart;
-        if (timePart <= currentTimeStr && !alertedReminders.has(alertKey)) {
+      let reminderDateStr = '';
+      let reminderTimeStr = '';
+      try {
+        const d = new Date(reminderRaw);
+        if (!isNaN(d.getTime())) {
+          // Convert to IST
+          const istStr = d.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+          const istDate = new Date(istStr);
+          const yyyy = istDate.getFullYear();
+          const mm = String(istDate.getMonth() + 1).padStart(2, '0');
+          const dd = String(istDate.getDate()).padStart(2, '0');
+          reminderDateStr = `${yyyy}-${mm}-${dd}`;
+          reminderTimeStr = String(istDate.getHours()).padStart(2, '0') + ':' + String(istDate.getMinutes()).padStart(2, '0');
+        }
+      } catch(e) {}
+
+      if (reminderDateStr === today && reminderTimeStr) {
+        const alertKey = id + '_' + today + '_' + reminderTimeStr;
+        if (reminderTimeStr <= currentTimeStr && !alertedReminders.has(alertKey)) {
           alertedReminders.add(alertKey);
           await telegramApi('sendMessage', {
             chat_id: primaryTelegramChatId,
-            text: '⏰ *REMINDER ALERT (Awais Kaam Tracker)*\n\n📌 *Task:* ' + title + '\n⏰ *Scheduled Time:* ' + timePart + ' (Aaj)\n\n✅ Done karne ke liye Dashboard open karein:\nhttps://awais-notion-cloud-agent.onrender.com/',
+            text: '⏰ *REMINDER ALERT (Awais Kaam Tracker)*\n\n📌 *Task:* ' + title + '\n⏰ *Scheduled Time:* ' + reminderTimeStr + ' IST (Aaj)\n\n✅ Done karne ke liye Dashboard open karein:\nhttps://awais-notion-cloud-agent.onrender.com/',
             parse_mode: 'Markdown'
           });
           console.log('[Alert Sent] Task: ' + title + ' -> Chat: ' + primaryTelegramChatId);
@@ -1603,6 +1686,33 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: false, error: 'Missing title' }));
   }
 
+  // Telegram Status & Test API
+  if (pathname === '/api/telegram/status') {
+    await initTelegramChatId();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      primaryTelegramChatId,
+      isRegistered: !!primaryTelegramChatId,
+      time: new Date().toISOString()
+    }));
+  }
+
+  if (pathname === '/api/telegram/test') {
+    await initTelegramChatId();
+    let target = urlObj.searchParams.get('id') || primaryTelegramChatId;
+    if (!target) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: false, error: 'No Telegram Chat ID registered yet. Send /start to @awais_notion_24_bot on Telegram.' }));
+    }
+    const r = await telegramApi('sendMessage', {
+      chat_id: target,
+      text: '🔔 *LIVE TEST NOTIFICATION from Awais Assistant!*\n\nAssalamu Alaikum Awais Bhai! Aapka phone successfully registered hai aur live push notification test pass ho gaya hai! ✅\n\n⏰ Agla Reminder: *Aaj Subah 08:00 AM (Aadhaar Address Update)*.',
+      parse_mode: 'Markdown'
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: r.ok, result: r }));
+  }
+
   // Smart Query API
   if (pathname === '/api/ask') {
     let q = urlObj.searchParams.get('q') || '';
@@ -1644,6 +1754,9 @@ if (require.main === module) {
   server.listen(PORT, () => {
     console.log('🚀 [Cloud Worker] Online on port ' + PORT + '. 24/7 Autonomous Sync & Dashboard Active!');
     
+    // Init Telegram Chat ID from Notion DB_CAPTURE
+    initTelegramChatId();
+
     // 20-second Quick Capture Sync loop
     setInterval(runQuickCaptureSync, 20000);
     runQuickCaptureSync();
