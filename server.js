@@ -1152,29 +1152,59 @@ async function handleSmartAssistant(rawText) {
   }
 
   // =========================================================
-  // 14. UNIVERSAL NOTION GLOBAL SEARCH (SAFE FALLBACK)
-  // Searches all databases and pages — NEVER drops random expenses!
+  // 14. UNIVERSAL NOTION GLOBAL SEARCH & LIVE AI EXTRACTOR (SAFE FALLBACK)
+  // Searches all databases and pages — extracts live facts, addresses, status!
   // =========================================================
   const cleanSearchQuery = text.replace(/^(kya|kab|kitna|kaha|kaise|tha|ta|hai|huwa|hua|ko|me|se|kar|do|kardo|bhai|yaar|please)\s+/gi, '').trim();
   if (cleanSearchQuery && cleanSearchQuery.length >= 2) {
-    const searchRes = await notionReq('search', 'POST', {
+    const searchRes = await notionReq('/v1/search', 'POST', {
       query: cleanSearchQuery,
       page_size: 5
     });
 
-    const results = searchRes.results || [];
+    const results = (searchRes.results || []).filter(r => {
+      const title = r.properties?.title?.title?.[0]?.plain_text ||
+                    r.properties?.Name?.title?.[0]?.plain_text ||
+                    r.properties?.['Location Name']?.title?.[0]?.plain_text ||
+                    r.properties?.['Platform / App']?.title?.[0]?.plain_text ||
+                    r.properties?.['Note / Baat']?.title?.[0]?.plain_text ||
+                    r.title?.[0]?.plain_text;
+      return Boolean(title);
+    });
+
     if (results.length > 0) {
-      const formatted = results.map(r => {
+      const formatted = results.map((r, idx) => {
         const title = r.properties?.title?.title?.[0]?.plain_text ||
                       r.properties?.Name?.title?.[0]?.plain_text ||
+                      r.properties?.['Location Name']?.title?.[0]?.plain_text ||
                       r.properties?.['Platform / App']?.title?.[0]?.plain_text ||
                       r.properties?.['Note / Baat']?.title?.[0]?.plain_text ||
-                      r.properties?.['Connection Name']?.title?.[0]?.plain_text ||
                       r.title?.[0]?.plain_text || 'Untitled Page';
-        const type = r.object === 'database' ? '🗄️ Database' : '📄 Page';
-        return `• ${type}: *${title}*`;
+        const type = r.object === 'database' ? '🗄️ Database' : '📄';
+
+        const snippets = [];
+        if (r.properties) {
+          for (const [key, val] of Object.entries(r.properties)) {
+            if (['Name', 'title', 'Note / Baat'].includes(key)) continue;
+            if (val.type === 'rich_text' && val.rich_text?.[0]?.plain_text) {
+              snippets.push(`*${key}:* ${val.rich_text[0].plain_text}`);
+            } else if (val.type === 'select' && val.select?.name) {
+              snippets.push(`*${key}:* ${val.select.name}`);
+            } else if (val.type === 'phone_number' && val.phone_number) {
+              snippets.push(`*Phone:* \`${val.phone_number}\``);
+            } else if (val.type === 'number' && typeof val.number === 'number') {
+              snippets.push(`*${key}:* ${val.number}`);
+            } else if (val.type === 'date' && val.date?.start) {
+              snippets.push(`*Date:* ${val.date.start}`);
+            }
+          }
+        }
+
+        const snippetText = snippets.slice(0, 3).join(' • ');
+        return `${idx + 1}️⃣ ${type} *${title}*${snippetText ? '\n   ' + snippetText : ''}`;
       });
-      return `🔍 *Notion me "${cleanSearchQuery}" se match hone wale records:*\n\n${formatted.join('\n')}\n\n💡 Aap inme se kisi bhi cheez ke baare me direct pooch sakte hain!`;
+
+      return `🔍 *Notion Live Smart Search ("${cleanSearchQuery}"):*\n\n${formatted.join('\n\n')}`;
     }
   }
 
