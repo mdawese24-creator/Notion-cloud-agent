@@ -584,6 +584,7 @@ const KNOWLEDGE_VAULT = {
             `• Branch: Siruguppa`,
 
   passwords: `🔑 *Quick Passcodes, Logins & Wi-Fi Vault:*\n\n` +
+             `• *Passport Seva Portal:* \`MDAWESE24@GMAIL.COM\` | Pass: \`MDawais123456@\` (Bengaluru Office)\n` +
              `• *Amazon (mdawaiskhaji469@gmail.com):* \`MDawais123\`\n` +
              `• *Abba Facebook Username:* \`MehaboobBasha24\`\n` +
              `• *Abba Indian Bank UPI PIN:* \`9945\`\n` +
@@ -594,6 +595,16 @@ const KNOWLEDGE_VAULT = {
              `🌐 *Wi-Fi Passwords:*\n` +
              `• *Bangalore PG Wi-Fi:* \`7204572981\`\n` +
              `• *Ghansoli PG Wi-Fi:* \`9167982677\``,
+
+  passport: `🛂 *Passport Seva Portal Credentials:*\n\n` +
+            `• *Portal:* Passport Seva (Ministry of External Affairs, Govt of India)\n` +
+            `• *Official URL:* https://services1.passportindia.gov.in/\n` +
+            `• *Passport Office:* Bengaluru\n` +
+            `• *Full Name:* MOHAMMED AWESE\n` +
+            `• *Login ID / Username:* \`MDAWESE24@GMAIL.COM\`\n` +
+            `• *Password:* \`MDawais123456@\`\n` +
+            `• *Connected Mobile:* 8123912392\n` +
+            `• *Saved in:* Notion Credentials Vault DB 1 (Personal Profile)`,
 
   epfo: `📝 *EPFO / PF Details:*\n\n` +
         `• *UAN Number:* \`101380566434\`\n` +
@@ -817,6 +828,10 @@ async function handleSmartAssistant(rawText) {
            `• *Login Email:* \`mdawaiskhaji469@gmail.com\`\n` +
            `• *New Password:* \`MDawais123\`\n` +
            `• *Updated in:* Notion Credentials Vault DB 2`;
+  }
+
+  if (hasKeyword(normalized, ['passport', 'passport seva', 'passport password', 'passport login', 'passport details'])) {
+    return KNOWLEDGE_VAULT.passport;
   }
 
   if (hasKeyword(normalized, ['wifi', 'wi-fi', 'password', 'passcode', 'screen lock', 'screenlock', 'locker', 'signal', 'onenote pin', 'device lock'])) {
