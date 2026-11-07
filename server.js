@@ -725,12 +725,18 @@ async function handleSmartAssistant(rawText) {
     'aadhaar status', 'adhar status', 'verify aadhaar', 'verify adhar',
     'srn', 'aadhaar srn', 'adhar srn', 'aadhaar update', 'adhar update'
   ])) {
-    return `🪪 *Awais Aadhaar Update & Status Check Tracker:*\n\n` +
-           `🔥 *Active Request (Submitted 07-Nov-2026):*\n` +
+    return `🪪 *Family Aadhaar Update & Status Check Tracker:*\n\n` +
+           `🔥 *1. Awais Aadhaar Update (Submitted 07-Nov-2026):*\n` +
            `• *SRN Number:* \`S1382137293580\`\n` +
            `• *Aadhaar Number:* \`7694 5296 4584\`\n` +
-           `• *Amount Paid:* ₹75.00 (Success ✅)\n` +
-           `• *Next Follow-up / Status Check:* Monday, 09-Nov-2026 @ 10:00 AM\n` +
+           `• *Status Check:* Monday, 09-Nov-2026 @ 10:00 AM\n` +
+           `• *New Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur (583121)\n\n` +
+           `🔥 *2. Abba (Mehaboob Basha) Aadhaar Update (Submitted 07-Nov-2026):*\n` +
+           `• *SRN Number:* \`S1359381405680\`\n` +
+           `• *Aadhaar Number:* \`2808 0852 5595\`\n` +
+           `• *Status Check:* Monday, 09-Nov-2026 @ 10:30 AM\n` +
+           `• *New Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur (583121)\n` +
+           `• *Proof:* Voter ID UBB1404151 (Fee: ₹75 Paid)\n\n` +
            `• *Check Status Online:* [UIDAI Check Status Portal](https://myaadhaar.uidai.gov.in/check-aadhaar-status)\n\n` +
            `🌐 *Direct Official Portal Links:*\n` +
            `• *MyAadhaar Portal (Main):* [myaadhaar.uidai.gov.in](https://myaadhaar.uidai.gov.in/)\n` +
