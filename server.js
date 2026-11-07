@@ -722,14 +722,19 @@ async function handleSmartAssistant(rawText) {
     'check aadhaar', 'check adhar', 'aadhaar card check', 'adhar card check',
     'aadhaar check', 'adhar check', 'aadhaar portal', 'adhar portal',
     'aadhaar link', 'adhar link', 'download aadhaar', 'download adhar',
-    'aadhaar status', 'adhar status', 'verify aadhaar', 'verify adhar'
+    'aadhaar status', 'adhar status', 'verify aadhaar', 'verify adhar',
+    'srn', 'aadhaar srn', 'adhar srn', 'aadhaar update', 'adhar update'
   ])) {
-    return `🪪 *Official Aadhaar Portal & Website (UIDAI):*\n\n` +
+    return `🪪 *Awais Aadhaar Update & Status Check Tracker:*\n\n` +
+           `🔥 *Active Request (Submitted 07-Nov-2026):*\n` +
+           `• *SRN Number:* \`S1382137293580\`\n` +
+           `• *Aadhaar Number:* \`7694 5296 4584\`\n` +
+           `• *Amount Paid:* ₹75.00 (Success ✅)\n` +
+           `• *Next Follow-up / Status Check:* Monday, 09-Nov-2026 @ 10:00 AM\n` +
+           `• *Check Status Online:* [UIDAI Check Status Portal](https://myaadhaar.uidai.gov.in/check-aadhaar-status)\n\n` +
            `🌐 *Direct Official Portal Links:*\n` +
            `• *MyAadhaar Portal (Main):* [myaadhaar.uidai.gov.in](https://myaadhaar.uidai.gov.in/)\n` +
-           `• *Check Aadhaar Status:* [myaadhaar.uidai.gov.in/check-aadhaar-status](https://myaadhaar.uidai.gov.in/check-aadhaar-status)\n` +
            `• *Download e-Aadhaar:* [myaadhaar.uidai.gov.in/genricDownloadAadhaar](https://myaadhaar.uidai.gov.in/genricDownloadAadhaar)\n` +
-           `• *Verify Aadhaar / Mobile:* [myaadhaar.uidai.gov.in/verify-email-mobile](https://myaadhaar.uidai.gov.in/verify-email-mobile)\n` +
            `• *Official UIDAI Homepage:* [uidai.gov.in](https://uidai.gov.in/)\n\n` +
            `📋 *Family Aadhaar Numbers (Ready to Use):*\n` +
            `• *Awais:* \`7694 5296 4584\`\n` +
@@ -750,7 +755,16 @@ async function handleSmartAssistant(rawText) {
       return `🪪 *Mahammad Athif (Atif) KYC Details:*\n\n• *Voter ID (EPIC):* \`UBB3353083\`\n• *Aadhaar:* \`6687 0862 2572\`\n• *PAN Card:* \`DYMPA6781D\`\n• *Mobile:* \`7619574514\``;
     }
     if (hasKeyword(normalized, ['awais', 'awese', 'mera voter', 'my voter', 'mera pan', 'mera aadhaar'])) {
-      return `🪪 *Mohammed Awese (Awais) Golden KYC:*\n\n• *Voter ID (EPIC):* \`UBB2822708\` (Form 8 Ref: S10092O8C2909261200065)\n• *Aadhaar No:* \`7694 5296 4584\`\n• *PAN Card:* \`DHWPM9916F\`\n• *Mobile:* \`8123912392\``;
+      return `🪪 *Mohammed Awese (Awais) Golden KYC:*\n\n` +
+             `• *Aadhaar No:* \`7694 5296 4584\`\n` +
+             `• *Active Update Request:* Address Update Submitted ✅\n` +
+             `  - *SRN:* \`S1382137293580\` (Fee: ₹75 Paid)\n` +
+             `  - *Submitted Date:* 07-Nov-2026 08:39 AM\n` +
+             `  - *Next Check Date:* 09-Nov-2026 @ 10:00 AM\n` +
+             `  - *New Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur - 583121\n` +
+             `• *Voter ID (EPIC):* \`UBB2822708\` (Form 8 Ref: S10092O8C2909261200065)\n` +
+             `• *PAN Card:* \`DHWPM9916F\`\n` +
+             `• *Mobile:* \`8123912392\``;
     }
     return KNOWLEDGE_VAULT.familyKYC;
   }
