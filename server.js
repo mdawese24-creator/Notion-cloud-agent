@@ -737,6 +737,12 @@ async function handleSmartAssistant(rawText) {
            `• *Status Check:* Monday, 09-Nov-2026 @ 10:30 AM\n` +
            `• *New Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur (583121)\n` +
            `• *Proof:* Voter ID UBB1404151 (Fee: ₹75 Paid)\n\n` +
+           `🔥 *3. Atif (Mahammad Athif) Aadhaar Update (Submitted 07-Nov-2026):*\n` +
+           `• *SRN Number:* \`S1391126936890\`\n` +
+           `• *Aadhaar Number:* \`6687 0862 2572\`\n` +
+           `• *Status Check:* Monday, 09-Nov-2026 @ 10:45 AM\n` +
+           `• *New Address:* 141 A, Near Jamiya Masjeed, Ward No 2, Desanur (583121)\n` +
+           `• *Proof:* Voter ID UBB3353083 (Fee: ₹75 Paid)\n\n` +
            `• *Check Status Online:* [UIDAI Check Status Portal](https://myaadhaar.uidai.gov.in/check-aadhaar-status)\n\n` +
            `🌐 *Direct Official Portal Links:*\n` +
            `• *MyAadhaar Portal (Main):* [myaadhaar.uidai.gov.in](https://myaadhaar.uidai.gov.in/)\n` +
