@@ -1,15 +1,27 @@
 {
   "name": "awais-notion-cloud-agent",
-  "version": "1.0.0",
-  "description": "24/7 Autonomous Cloud Sync Engine & Mobile Assistant for Notion",
+  "version": "1.1.0",
+  "description": "24/7 Autonomous Cloud Sync Engine, Notion Assistant & WhatsApp Forwarder",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["notion", "telegram", "automation", "expenses"],
+  "keywords": [
+    "notion",
+    "telegram",
+    "automation",
+    "expenses",
+    "whatsapp",
+    "forwarder"
+  ],
   "author": "Md Awais",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.12",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4"
   }
 }
