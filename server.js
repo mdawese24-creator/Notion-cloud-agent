@@ -8,6 +8,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const waForwarder = require('./whatsapp-forwarder');
 
 const PORT = process.env.PORT || 3000;
 const NOTION_TOKEN = process.env.NOTION_TOKEN || Buffer.from('bnRuXzY4NjYxNjgxMzM4NTcxUHREQjJNT1hIbERPRE9DY2ljejlKdEJVSGJoUXdjQWE=', 'base64').toString('utf8');
@@ -1671,6 +1672,51 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  // --- Tuba WhatsApp Gateway Endpoints ---
+  if (req.method === 'GET' && pathname === '/whatsapp') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(waForwarder.getWhatsAppDashboardHtml());
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/whatsapp/pair') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const parsed = JSON.parse(body || '{}');
+        const code = await waForwarder.requestPairingCode(parsed.phone || '919945161755');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ code }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+
+  if (req.method === 'GET' && pathname === '/api/whatsapp/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(waForwarder.getStatus()));
+    return;
+  }
+
+  if (req.method === 'GET' && pathname.startsWith('/media/')) {
+    const filename = path.basename(pathname);
+    const filePath = path.join(__dirname, 'public_media', filename);
+    if (fs.existsSync(filePath)) {
+      const ext = path.extname(filename).toLowerCase();
+      const contentType = ext === '.mp4' ? 'video/mp4' : 'image/jpeg';
+      res.writeHead(200, { 'Content-Type': contentType });
+      fs.createReadStream(filePath).pipe(res);
+      return;
+    }
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Media not found');
+    return;
+  }
+
   // Real-time Dashboard API
   if (pathname === '/api/dashboard') {
     const payload = await getDashboardPayload();
@@ -1816,5 +1862,21 @@ if (require.main === module) {
         console.log('[Keep-Alive] Ping error: ' + err.message);
       });
     }, 10 * 60 * 1000);
+
+    // Launch Tuba WhatsApp 2-Way Group Forwarder & Social Broadcast Engine
+    waForwarder.startWhatsAppEngine({
+      notionReq,
+      dbCaptureId: DB_CAPTURE,
+      getBaseUrl: () => 'https://awais-notion-cloud-agent.onrender.com',
+      sendTelegramAlert: (text) => {
+        if (primaryTelegramChatId) {
+          telegramApi('sendMessage', {
+            chat_id: primaryTelegramChatId,
+            text,
+            parse_mode: 'Markdown'
+          });
+        }
+      }
+    }).catch(err => console.error('[WhatsApp Engine Error]', err));
   });
 }
